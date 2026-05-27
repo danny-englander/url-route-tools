@@ -39,6 +39,29 @@
     .theme-scroll::-webkit-scrollbar-thumb:hover {
       background: #3a3a3a;
     }
+
+    #appDialog {
+      box-sizing: border-box;
+      width: 600px;
+      max-width: calc(100vw - 2rem);
+      padding: 1.5rem;
+      border: 1px solid #3f3f46;
+      background: #18181b;
+      color: #f4f4f5;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    #appDialog::backdrop {
+      background: rgba(0, 0, 0, 0.72);
+    }
+
+    #appDialog[open] {
+      position: fixed;
+      top: 100px;
+      left: 50%;
+      margin: 0;
+      transform: translateX(-50%);
+    }
   </style>
 </head>
 
@@ -194,6 +217,19 @@
     </div>
   </div>
 
+  <dialog id="appDialog" class="outline-none">
+    <form method="dialog" class="m-0 flex flex-col gap-4 p-0">
+      <h2 id="appDialogTitle"
+        class="font-display text-sm tracking-widest text-yellow-500"></h2>
+      <p id="appDialogMessage"
+        class="text-sm leading-relaxed text-zinc-300"></p>
+      <button type="submit" value="ok"
+        class="font-display w-full cursor-pointer bg-yellow-500 px-4 py-2.5 text-sm tracking-widest text-zinc-950 transition hover:opacity-90">
+        OK
+      </button>
+    </form>
+  </dialog>
+
   <script>
     const SERVER = "http://localhost:3333";
     let reportData = [];
@@ -223,6 +259,24 @@
 
     function formatSeconds(elapsedMs) {
       return (Math.max(0, elapsedMs) / 1000).toFixed(1);
+    }
+
+    function showAppDialog(message, title = "Notice") {
+      document.getElementById("appDialogTitle").textContent = title;
+      document.getElementById("appDialogMessage").textContent = message;
+      const dialog = document.getElementById("appDialog");
+      if (typeof dialog.showModal === "function") {
+        dialog.showModal();
+      } else {
+        window.alert(`${title}\n\n${message}`);
+      }
+    }
+
+    function setupAppDialog() {
+      const dialog = document.getElementById("appDialog");
+      dialog.addEventListener("click", (e) => {
+        if (e.target === dialog) dialog.close();
+      });
     }
 
     // ── Default checks ──────────────────────────────────────────────────────────
@@ -557,11 +611,17 @@
       const checks = getChecks();
 
       if (!siteUrl) {
-        alert("Please enter a DDEV site URL.");
+        showAppDialog(
+          "Please enter a DDEV site URL.",
+          "Site URL required",
+        );
         return;
       }
       if (!checks.length) {
-        alert("Please add at least one check.");
+        showAppDialog(
+          "Please add at least one check with a selector.",
+          "Checks required",
+        );
         return;
       }
 
@@ -571,7 +631,7 @@
           document.getElementById("urlListJson").value,
         );
         if (!parsed.ok) {
-          alert(parsed.message);
+          showAppDialog(parsed.message, "URL list invalid");
           updateUrlListStatus();
           return;
         }
@@ -786,6 +846,7 @@
       "No results yet.<br/>Enter your DDEV site URL, add selector checks,<br/>and click <strong>SCAN</strong>.",
     );
     setupStyleHmr();
+    setupAppDialog();
     setupUrlListUi();
     defaults.forEach(addCheck);
   </script>
