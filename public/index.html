@@ -59,10 +59,57 @@
       <aside
         class="theme-scroll flex w-96 shrink-0 flex-col gap-6 overflow-y-auto border-r border-zinc-800 bg-zinc-900 px-6 py-7">
         <div class="flex flex-col gap-2">
+          <span class="text-xs uppercase tracking-widest text-zinc-400">URL
+            source</span>
+          <div class="grid grid-cols-2 border border-zinc-800" role="group"
+            aria-label="URL source">
+            <button type="button" id="urlSourceSitemap"
+              class="url-source-tab cursor-pointer border-r border-zinc-800 bg-yellow-500/15 px-2 py-2 text-xs tracking-widest text-yellow-500"
+              data-mode="sitemap">
+              Sitemap
+            </button>
+            <button type="button" id="urlSourceList"
+              class="url-source-tab cursor-pointer bg-zinc-950 px-2 py-2 text-xs tracking-widest text-zinc-400 transition hover:text-zinc-200"
+              data-mode="urlList">
+              URL list
+            </button>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-2">
           <label class="text-xs uppercase tracking-widest text-zinc-400">Site
             URL</label>
           <input type="url" id="siteUrl" placeholder="http://mysite.ddev.site"
             class="w-full border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none transition focus:border-yellow-500" />
+          <p id="sitemapHint" class="text-xs leading-relaxed text-zinc-500">
+            Fetches <code class="text-zinc-400">/sitemap.xml</code> from this
+            host (local TLS uses this URL).
+          </p>
+        </div>
+
+        <div id="urlListPanel"
+          class="hidden flex flex-col gap-2.5 border border-zinc-800 bg-zinc-950 p-3">
+          <label
+            class="cursor-pointer text-xs uppercase tracking-widest text-zinc-400">
+            <span class="mb-1.5 block">Choose JSON file…</span>
+            <input type="file" id="urlListFile" accept=".json,application/json"
+              class="block w-full cursor-pointer text-xs text-zinc-300 file:mr-2 file:cursor-pointer file:border-0 file:bg-zinc-800 file:px-2 file:py-1 file:text-xs file:tracking-widest file:text-yellow-500" />
+          </label>
+          <p class="text-center text-xs text-zinc-500">— or paste —</p>
+          <textarea id="urlListJson" rows="8" spellcheck="false"
+            placeholder='Paste JSON array, e.g. ["https://mysite.ddev.site/about", …]'
+            class="w-full resize-y border border-zinc-800 bg-zinc-900 px-2 py-2 font-mono text-xs leading-relaxed text-zinc-100 outline-none transition focus:border-yellow-500"></textarea>
+          <p class="text-xs leading-relaxed text-zinc-500">
+            <button type="button" id="urlListSampleBtn"
+              class="cursor-pointer text-yellow-500 underline decoration-yellow-500/40 underline-offset-2 hover:text-yellow-400">
+              Sample format
+            </button>
+            <span class="text-zinc-600">
+              — </span><code
+              class="text-zinc-500">["https://connect.ddev.site/path", …]</code>
+          </p>
+          <p id="urlListStatus" class="min-h-[1.25rem] text-xs text-zinc-400"
+            aria-live="polite"></p>
         </div>
 
         <div>
@@ -161,6 +208,14 @@
     let isScanning = false;
     /** When true, log each SSE payload to the browser console (checkbox or ?debug=1). */
     let clientScanDebug = false;
+    let urlSourceMode = "sitemap";
+    let parsedUrlList = null;
+    let urlListParseTimer = null;
+
+    const URL_LIST_SAMPLE = `[
+  "https://connect.ddev.site/page-one",
+  "https://connect.ddev.site/page-two"
+]`;
 
     function formatSeconds(elapsedMs) {
       return (Math.max(0, elapsedMs) / 1000).toFixed(1);
@@ -327,6 +382,145 @@
       container.appendChild(wrap);
     }
 
+    function getUrlSourceMode() {
+      return urlSourceMode;
+    }
+
+    function setUrlSourceMode(mode) {
+      urlSourceMode = mode;
+      const sitemapBtn = document.getElementById("urlSourceSitemap");
+      const listBtn = document.getElementById("urlSourceList");
+      const panel = document.getElementById("urlListPanel");
+      const hint = document.getElementById("sitemapHint");
+      const active =
+        "url-source-tab cursor-pointer bg-yellow-500/15 px-2 py-2 text-xs tracking-widest text-yellow-500";
+      const inactive =
+        "url-source-tab cursor-pointer bg-zinc-950 px-2 py-2 text-xs tracking-widest text-zinc-400 transition hover:text-zinc-200";
+
+      if (mode === "sitemap") {
+        sitemapBtn.className = `${active} border-r border-zinc-800`;
+        listBtn.className = inactive;
+        panel.classList.add("hidden");
+        panel.classList.remove("flex");
+        hint.classList.remove("hidden");
+      } else {
+        sitemapBtn.className = `${inactive} border-r border-zinc-800`;
+        listBtn.className = active;
+        panel.classList.remove("hidden");
+        panel.classList.add("flex");
+        hint.classList.add("hidden");
+        scheduleUrlListParse();
+      }
+    }
+
+    function parseUrlListText(text) {
+      const trimmed = text.trim();
+      if (!trimmed) {
+        return { ok: false, message: "Paste a JSON array of URLs or choose a file." };
+      }
+      let data;
+      try {
+        data = JSON.parse(trimmed);
+      } catch (e) {
+        return { ok: false, message: `Invalid JSON: ${e.message}` };
+      }
+      if (!Array.isArray(data)) {
+        return { ok: false, message: "JSON must be an array of URL strings." };
+      }
+      const urls = [];
+      const seen = new Set();
+      let validCount = 0;
+      for (let i = 0; i < data.length; i++) {
+        const item = data[i];
+        if (typeof item !== "string") {
+          return {
+            ok: false,
+            message: `Entry ${i + 1} must be a string.`,
+          };
+        }
+        const s = item.trim();
+        if (!s) continue;
+        validCount++;
+        try {
+          const href = new URL(s).href;
+          if (!seen.has(href)) {
+            seen.add(href);
+            urls.push(href);
+          }
+        } catch {
+          return { ok: false, message: `Invalid URL at entry ${i + 1}: ${s}` };
+        }
+      }
+      if (!urls.length) {
+        return { ok: false, message: "No valid URLs in the list." };
+      }
+      return { ok: true, urls, validCount };
+    }
+
+    function updateUrlListStatus() {
+      const statusEl = document.getElementById("urlListStatus");
+      const text = document.getElementById("urlListJson")?.value ?? "";
+      if (!text.trim()) {
+        parsedUrlList = null;
+        statusEl.textContent = "";
+        statusEl.className = "min-h-[1.25rem] text-xs text-zinc-400";
+        return;
+      }
+      const result = parseUrlListText(text);
+      if (result.ok) {
+        parsedUrlList = result.urls;
+        const dupNote =
+          result.validCount > result.urls.length ? " (duplicates removed)" : "";
+        statusEl.textContent = `${result.urls.length} URL${result.urls.length === 1 ? "" : "s"} loaded${dupNote}`;
+        statusEl.className = "min-h-[1.25rem] text-xs text-emerald-400/90";
+      } else {
+        parsedUrlList = null;
+        statusEl.textContent = result.message;
+        statusEl.className = "min-h-[1.25rem] text-xs text-rose-400/90";
+      }
+    }
+
+    function scheduleUrlListParse() {
+      clearTimeout(urlListParseTimer);
+      urlListParseTimer = setTimeout(updateUrlListStatus, 200);
+    }
+
+    function setupUrlListUi() {
+      document
+        .getElementById("urlSourceSitemap")
+        .addEventListener("click", () => setUrlSourceMode("sitemap"));
+      document
+        .getElementById("urlSourceList")
+        .addEventListener("click", () => setUrlSourceMode("urlList"));
+
+      const textarea = document.getElementById("urlListJson");
+      textarea.addEventListener("input", scheduleUrlListParse);
+      textarea.addEventListener("blur", updateUrlListStatus);
+
+      document.getElementById("urlListSampleBtn").addEventListener("click", () => {
+        textarea.value = URL_LIST_SAMPLE;
+        scheduleUrlListParse();
+        textarea.focus();
+      });
+
+      document.getElementById("urlListFile").addEventListener("change", (evt) => {
+        const file = evt.target.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          textarea.value = String(reader.result ?? "");
+          scheduleUrlListParse();
+        };
+        reader.onerror = () => {
+          parsedUrlList = null;
+          const statusEl = document.getElementById("urlListStatus");
+          statusEl.textContent = `Could not read file: ${file.name}`;
+          statusEl.className = "min-h-[1.25rem] text-xs text-rose-400/90";
+        };
+        reader.readAsText(file);
+      });
+    }
+
     function setScanningState(scanning) {
       isScanning = scanning;
       const runBtn = document.getElementById("runBtn");
@@ -360,6 +554,20 @@
         return;
       }
 
+      let scanUrls = null;
+      if (getUrlSourceMode() === "urlList") {
+        const parsed = parseUrlListText(
+          document.getElementById("urlListJson").value,
+        );
+        if (!parsed.ok) {
+          alert(parsed.message);
+          updateUrlListStatus();
+          return;
+        }
+        scanUrls = parsed.urls;
+        updateUrlListStatus();
+      }
+
       // Reset state
       reportData = [];
       hitRows = [];
@@ -391,7 +599,14 @@
       clientScanDebug =
         document.getElementById("debugScan")?.checked === true;
       if (clientScanDebug)
-        console.log("[scan] POST /scan", { siteUrl, checks: checks.length });
+        console.log("[scan] POST /scan", {
+          siteUrl,
+          checks: checks.length,
+          urls: scanUrls?.length ?? "sitemap",
+        });
+
+      const scanBody = { siteUrl, checks, debug: clientScanDebug };
+      if (scanUrls) scanBody.urls = scanUrls;
 
       try {
         const response = await fetch(`${SERVER}/scan`, {
@@ -399,9 +614,18 @@
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ siteUrl, checks, debug: clientScanDebug }),
+          body: JSON.stringify(scanBody),
           signal: currentScanController.signal,
         });
+
+        if (!response.ok) {
+          const hint =
+            response.status === 413
+              ? "URL list is too large. Restart the server after raising SITEMAP_SCAN_BODY_LIMIT_MB (default 25)."
+              : `HTTP ${response.status}`;
+          setStatus(`⚠ Scan request failed — ${hint}`);
+          return;
+        }
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
@@ -551,6 +775,7 @@
       "No results yet.<br/>Enter your DDEV site URL, add selector checks,<br/>and click <strong>SCAN</strong>.",
     );
     setupStyleHmr();
+    setupUrlListUi();
     defaults.forEach(addCheck);
   </script>
 </body>

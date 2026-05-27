@@ -20,7 +20,10 @@ node server.js
 You will see the url in terminal: `http://localhost:3333`
 
 ## Usage
-- Enter any base site URL (that has a sitemap) in the "Site URL" field.
+- Choose **Sitemap** (default) or **URL list** as the URL source.
+- Enter a base site URL in **Site URL** (used for sitemap fetch and local TLS; keep it aligned with your DDEV host).
+- **Sitemap**: fetches `/sitemap.xml` from the site URL.
+- **URL list**: paste or upload a JSON array of full URLs, e.g. `["https://connect.ddev.site/page-one", "https://connect.ddev.site/page-two"]`. The UI shows how many URLs loaded after parse.
 - Use the various fields in the UI to configure the checks you want to run.
 - The fields are:
   - Label: A label for the check. (Useful for the exported report to identify the check)
@@ -39,6 +42,8 @@ You will see the url in terminal: `http://localhost:3333`
 
 ## Debugging
 You can enable debugging by checking the "Debug" checkbox. This will log the server logs and the browser console to the terminal.
+
+Large URL lists are sent in the POST body. The default JSON limit is **25 MB** (`SITEMAP_SCAN_BODY_LIMIT_MB`). If you see **413 Payload Too Large**, restart the server with a higher value, e.g. `SITEMAP_SCAN_BODY_LIMIT_MB=50 node server.js`.
 
 ## Roadmap
 - Specify the sitemap link if it differs from the standard `site.com/sitemap.xml` path

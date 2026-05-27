@@ -9,7 +9,12 @@ import { fileURLToPath } from "node:url";
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+
+const bodyLimitMb = Number(process.env.SITEMAP_SCAN_BODY_LIMIT_MB || 25);
+const jsonBodyLimit =
+  Number.isFinite(bodyLimitMb) && bodyLimitMb > 0 ? `${bodyLimitMb}mb` : "25mb";
+app.use(express.json({ limit: jsonBodyLimit }));
+
 app.use(express.static("public")); // serves the UI
 
 const __filename = fileURLToPath(import.meta.url);
@@ -324,9 +329,48 @@ async function fetchAllUrls(baseUrl, onStatus = () => {}, dbg = () => {}) {
   return direct;
 }
 
+/** JSON URL list: array of strings; optional relative paths resolved against baseUrl. Deduped in order. */
+function normalizeUrlList(raw, baseUrl) {
+  if (!Array.isArray(raw)) {
+    throw new Error("URL list must be a JSON array of strings.");
+  }
+  if (raw.length === 0) {
+    throw new Error("URL list is empty.");
+  }
+  let base;
+  try {
+    base = new URL(baseUrl);
+  } catch {
+    throw new Error("Site URL is not a valid base for the URL list.");
+  }
+  const seen = new Set();
+  const out = [];
+  for (let i = 0; i < raw.length; i++) {
+    const item = raw[i];
+    if (typeof item !== "string") {
+      throw new Error(`URL list entry ${i + 1} must be a string.`);
+    }
+    const trimmed = item.trim();
+    if (!trimmed) continue;
+    let href;
+    try {
+      href = new URL(trimmed, base).href;
+    } catch {
+      throw new Error(`Invalid URL at entry ${i + 1}: ${trimmed}`);
+    }
+    if (seen.has(href)) continue;
+    seen.add(href);
+    out.push(href);
+  }
+  if (out.length === 0) {
+    throw new Error("URL list has no valid URLs after parsing.");
+  }
+  return out;
+}
+
 // SSE endpoint — streams results back to the UI in real time
 app.post("/scan", async (req, res) => {
-  const { siteUrl, checks, debug: bodyDebug } = req.body;
+  const { siteUrl, checks, urls: bodyUrls, debug: bodyDebug } = req.body;
   const dbg = makeDbg(DEBUG_ENV || Boolean(bodyDebug));
   let cancelled = false;
   let browser;
@@ -360,14 +404,31 @@ app.post("/scan", async (req, res) => {
   };
 
   try {
-    dbg("scan start", { siteUrl, checks: checks?.length ?? 0, debugEnv: DEBUG_ENV, bodyDebug: Boolean(bodyDebug) });
-    if (!send({ type: "status", message: "Fetching sitemap..." })) return;
-    const urls = await fetchAllUrls(
+    if (!siteUrl || typeof siteUrl !== "string") {
+      throw new Error("Site URL is required.");
+    }
+    dbg("scan start", {
       siteUrl,
-      (message) => send({ type: "status", message }),
-      dbg
-    );
-    dbg("urls resolved", urls.length);
+      checks: checks?.length ?? 0,
+      urlList: Array.isArray(bodyUrls) && bodyUrls.length > 0,
+      debugEnv: DEBUG_ENV,
+      bodyDebug: Boolean(bodyDebug),
+    });
+
+    let urls;
+    if (Array.isArray(bodyUrls) && bodyUrls.length > 0) {
+      if (!send({ type: "status", message: "Loading URL list..." })) return;
+      urls = normalizeUrlList(bodyUrls, siteUrl);
+      dbg("url list", urls.length);
+    } else {
+      if (!send({ type: "status", message: "Fetching sitemap..." })) return;
+      urls = await fetchAllUrls(
+        siteUrl,
+        (message) => send({ type: "status", message }),
+        dbg
+      );
+      dbg("urls resolved", urls.length);
+    }
     if (!send({ type: "urls_found", count: urls.length })) return;
 
     if (cancelled) return;
@@ -510,6 +571,7 @@ app.post("/scan", async (req, res) => {
 
 app.listen(3333, () => {
   console.log("✅ Server running at http://localhost:3333");
+  console.log(`   POST /scan JSON body limit: ${jsonBodyLimit}`);
   if (DEBUG_ENV) {
     console.log("🐛 Debug logging on (SITEMAP_CHECKER_DEBUG=1 or DEBUG=sitemap-checker)");
   }
