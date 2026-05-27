@@ -89,12 +89,16 @@
 
         <div id="urlListPanel"
           class="hidden flex flex-col gap-2.5 border border-zinc-800 bg-zinc-950 p-3">
-          <label
-            class="cursor-pointer text-xs uppercase tracking-widest text-zinc-400">
-            <span class="mb-1.5 block">Choose JSON file…</span>
+          <div class="flex flex-col gap-1.5">
             <input type="file" id="urlListFile" accept=".json,application/json"
-              class="block w-full cursor-pointer text-xs text-zinc-300 file:mr-2 file:cursor-pointer file:border-0 file:bg-zinc-800 file:px-2 file:py-1 file:text-xs file:tracking-widest file:text-yellow-500" />
-          </label>
+              class="hidden" />
+            <label for="urlListFile"
+              class="block w-full cursor-pointer border border-yellow-500 bg-yellow-500/10 px-3 py-2 text-center text-xs tracking-widest text-yellow-500 transition hover:bg-yellow-500/20">
+              Choose JSON file…
+            </label>
+            <span id="urlListFileName"
+              class="hidden truncate text-xs text-zinc-500"></span>
+          </div>
           <p class="text-center text-xs text-zinc-500">— or paste —</p>
           <textarea id="urlListJson" rows="8" spellcheck="false"
             placeholder='Paste JSON array, e.g. ["https://mysite.ddev.site/about", …]'
@@ -505,7 +509,14 @@
 
       document.getElementById("urlListFile").addEventListener("change", (evt) => {
         const file = evt.target.files?.[0];
-        if (!file) return;
+        const nameEl = document.getElementById("urlListFileName");
+        if (!file) {
+          nameEl.textContent = "";
+          nameEl.classList.add("hidden");
+          return;
+        }
+        nameEl.textContent = file.name;
+        nameEl.classList.remove("hidden");
         const reader = new FileReader();
         reader.onload = () => {
           textarea.value = String(reader.result ?? "");
