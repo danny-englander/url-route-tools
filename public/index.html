@@ -158,6 +158,12 @@
           <input type="checkbox" id="debugScan" class="accent-yellow-500" />
           <span>Debug (server log + browser console)</span>
         </label>
+        <label
+          class="flex cursor-pointer items-center gap-2 text-xs text-zinc-400">
+          <input type="checkbox" id="loginWithDrushUli"
+            class="accent-yellow-500" />
+          <span>Login as admin first (ddev drush uli)</span>
+        </label>
 
         <button id="runBtn" onclick="runScan()"
           class="font-display w-full cursor-pointer bg-yellow-500 px-4 py-3 text-2xl tracking-widest text-zinc-950 transition hover:-translate-y-px hover:opacity-90">
@@ -186,6 +192,12 @@
             <div class="h-2 w-2 rounded-full bg-orange-400"></div>
             <span class="font-bold text-zinc-100" id="countError">0</span>
             <span class="text-zinc-400">errors</span>
+          </div>
+          <div id="loginVerifiedBadge"
+            class="hidden items-center gap-1.5 rounded border border-emerald-500/40 bg-emerald-500/10 px-2 py-0.5 text-xs text-emerald-400"
+            title="Drupal session cookie present — scan is running as admin">
+            <div class="h-2 w-2 rounded-full bg-emerald-400"></div>
+            <span class="font-semibold tracking-wide">Login verified</span>
           </div>
           <span class="ml-auto text-xs italic tracking-widest text-zinc-400"
             id="statusMsg">Configure checks and click SCAN</span>
@@ -664,19 +676,28 @@
       scanStartedAtMs = Date.now();
 
       setScanningState(true);
+      setLoginVerified(false);
 
       setStatus("Connecting to local server…");
 
       clientScanDebug =
         document.getElementById("debugScan")?.checked === true;
+      const loginWithDrushUli =
+        document.getElementById("loginWithDrushUli")?.checked === true;
       if (clientScanDebug)
         console.log("[scan] POST /scan", {
           siteUrl,
           checks: checks.length,
           urls: scanUrls?.length ?? "sitemap",
+          loginWithDrushUli,
         });
 
-      const scanBody = { siteUrl, checks, debug: clientScanDebug };
+      const scanBody = {
+        siteUrl,
+        checks,
+        debug: clientScanDebug,
+        loginWithDrushUli,
+      };
       if (scanUrls) scanBody.urls = scanUrls;
 
       try {
@@ -748,6 +769,7 @@
     function handleEvent(ev) {
       if (clientScanDebug) console.log("[scan SSE]", ev.type, ev);
       if (ev.type === "status") setStatus(ev.message);
+      if (ev.type === "login_verified") setLoginVerified(true);
       if (ev.type === "urls_found") {
         scanProgress.total = ev.count;
         document.getElementById("progressLabel").textContent =
@@ -794,6 +816,18 @@
 
     function setStatus(msg) {
       document.getElementById("statusMsg").textContent = msg;
+    }
+
+    function setLoginVerified(verified) {
+      const badge = document.getElementById("loginVerifiedBadge");
+      if (!badge) return;
+      if (verified) {
+        badge.classList.remove("hidden");
+        badge.classList.add("flex");
+      } else {
+        badge.classList.add("hidden");
+        badge.classList.remove("flex");
+      }
     }
     function updateStats() {
       document.getElementById("countPass").textContent = stats.pass;

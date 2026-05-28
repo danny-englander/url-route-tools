@@ -6,6 +6,7 @@ import { Agent } from "undici";
 import { watch } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { spawn } from "node:child_process";
 
 const app = express();
 app.use(cors());
@@ -368,9 +369,108 @@ function normalizeUrlList(raw, baseUrl) {
   return out;
 }
 
+async function runDrushUli(baseUrl) {
+  let siteOrigin;
+  let siteHostname;
+  try {
+    const parsed = new URL(baseUrl);
+    siteOrigin = parsed.origin;
+    siteHostname = parsed.hostname;
+  } catch {
+    throw new Error("Site URL is invalid; cannot run ddev drush uli.");
+  }
+
+  const parseUliUrl = (output) => {
+    const match = output.match(/https?:\/\/\S+/);
+    return match ? match[0] : null;
+  };
+
+  const runDdev = (args) =>
+    new Promise((resolve, reject) => {
+      const child = spawn("ddev", args, { cwd: process.cwd() });
+      let stdout = "";
+      let stderr = "";
+
+      child.stdout.on("data", (chunk) => {
+        stdout += String(chunk);
+      });
+      child.stderr.on("data", (chunk) => {
+        stderr += String(chunk);
+      });
+      child.on("error", (err) => {
+        reject(new Error(`Failed to start ddev command: ${err.message}`));
+      });
+      child.on("close", (code) => {
+        resolve({
+          code,
+          stdout: stdout.trim(),
+          stderr: stderr.trim(),
+          command: `ddev ${args.join(" ")}`
+        });
+      });
+    });
+
+  // Different DDEV setups support different command styles.
+  const candidates = [];
+  const inferredProjectName =
+    siteHostname && siteHostname.endsWith(".ddev.site")
+      ? siteHostname.slice(0, -".ddev.site".length)
+      : "";
+
+  if (inferredProjectName) {
+    candidates.push(
+      ["exec", "-p", inferredProjectName, "drush", "uli"],
+      ["exec", "-p", inferredProjectName, "drush", "uli", `--uri=${siteOrigin}`, "--no-browser"],
+      ["exec", "--project", inferredProjectName, "drush", "uli"],
+      ["exec", "--project", inferredProjectName, "drush", "uli", `--uri=${siteOrigin}`, "--no-browser"]
+    );
+  }
+  candidates.push(
+    ["exec", "drush", "uli"],
+    ["exec", "drush", "uli", `--uri=${siteOrigin}`, "--no-browser"],
+    ["drush", "uli"],
+    ["drush", "uli", `--uri=${siteOrigin}`, "--no-browser"]
+  );
+
+  const uniqueCandidates = [];
+  const seen = new Set();
+  for (const args of candidates) {
+    const key = args.join("\u0000");
+    if (seen.has(key)) continue;
+    seen.add(key);
+    uniqueCandidates.push(args);
+  }
+
+  const failures = [];
+  for (const args of uniqueCandidates) {
+    const result = await runDdev(args);
+    if (result.code === 0) {
+      const url = parseUliUrl(`${result.stdout}\n${result.stderr}`);
+      if (url) return url;
+      failures.push(
+        `${result.command} succeeded but no URL found in output: ${result.stdout || result.stderr || "(empty output)"}`
+      );
+      continue;
+    }
+    failures.push(
+      `${result.command} failed (exit ${result.code}): ${result.stderr || result.stdout || "Unknown error"}`
+    );
+  }
+
+  throw new Error(
+    `Could not generate admin login URL with DDEV/Drush. Tried: ${failures.join(" | ")}`
+  );
+}
+
 // SSE endpoint — streams results back to the UI in real time
 app.post("/scan", async (req, res) => {
-  const { siteUrl, checks, urls: bodyUrls, debug: bodyDebug } = req.body;
+  const {
+    siteUrl,
+    checks,
+    urls: bodyUrls,
+    debug: bodyDebug,
+    loginWithDrushUli
+  } = req.body;
   const dbg = makeDbg(DEBUG_ENV || Boolean(bodyDebug));
   let cancelled = false;
   let browser;
@@ -411,6 +511,7 @@ app.post("/scan", async (req, res) => {
       siteUrl,
       checks: checks?.length ?? 0,
       urlList: Array.isArray(bodyUrls) && bodyUrls.length > 0,
+      loginWithDrushUli: Boolean(loginWithDrushUli),
       debugEnv: DEBUG_ENV,
       bodyDebug: Boolean(bodyDebug),
     });
@@ -429,6 +530,33 @@ app.post("/scan", async (req, res) => {
       );
       dbg("urls resolved", urls.length);
     }
+
+    if (Boolean(loginWithDrushUli)) {
+      const rewritten = urls.map((url) => rewriteUrlToBaseOrigin(url, siteUrl));
+      const deduped = [];
+      const seen = new Set();
+      for (const url of rewritten) {
+        if (seen.has(url)) continue;
+        seen.add(url);
+        deduped.push(url);
+      }
+      const rewriteCount = rewritten.reduce((count, url, i) => {
+        return count + (url !== urls[i] ? 1 : 0);
+      }, 0);
+      urls = deduped;
+      if (rewriteCount > 0) {
+        if (
+          !send({
+            type: "status",
+            message: `Aligned ${rewriteCount} URL${rewriteCount === 1 ? "" : "s"} to ${new URL(siteUrl).origin} for authenticated crawl`
+          })
+        ) {
+          return;
+        }
+      }
+      dbg("login mode url alignment", { rewriteCount, total: urls.length });
+    }
+
     if (!send({ type: "urls_found", count: urls.length })) return;
 
     if (cancelled) return;
@@ -441,6 +569,51 @@ app.post("/scan", async (req, res) => {
       Number.isFinite(scanConcurrencyRaw) && scanConcurrencyRaw > 0
         ? Math.floor(scanConcurrencyRaw)
         : 8;
+
+    if (Boolean(loginWithDrushUli)) {
+      if (!send({ type: "status", message: "Generating admin login link..." })) return;
+      const uliUrl = await runDrushUli(siteUrl);
+      dbg("drush uli generated", uliUrl);
+      if (!send({ type: "status", message: "Logging in as admin..." })) return;
+      const loginPage = await context.newPage();
+      try {
+        await loginPage.goto(uliUrl, {
+          waitUntil: "domcontentloaded",
+          timeout: 20000
+        });
+        await loginPage.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
+        await loginPage.goto(siteUrl, {
+          waitUntil: "domcontentloaded",
+          timeout: 15000
+        });
+      } finally {
+        await loginPage.close().catch(() => {});
+      }
+
+      const authCookies = (await context.cookies(siteUrl)).filter((cookie) =>
+        /^S?SESS/i.test(cookie.name)
+      );
+      dbg(
+        "login cookie check",
+        authCookies.length > 0 ? "ok" : "missing",
+        authCookies.map((c) => c.name).join(",")
+      );
+      if (authCookies.length === 0) {
+        throw new Error(
+          "Admin login did not stick (no Drupal session cookie found). Make sure the siteUrl matches the DDEV project's canonical domain."
+        );
+      }
+      if (!send({ type: "login_verified", cookieCount: authCookies.length })) return;
+      if (
+        !send({
+          type: "status",
+          message: `Admin login confirmed (${authCookies.length} session cookie${authCookies.length === 1 ? "" : "s"})`
+        })
+      ) {
+        return;
+      }
+    }
+
     dbg("scan workers", scanConcurrency);
     send({ type: "status", message: `Scanning pages with ${scanConcurrency} worker(s)...` });
 
