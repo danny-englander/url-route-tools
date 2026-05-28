@@ -23,7 +23,7 @@ You will see the url in terminal: `http://localhost:3333`
 - Choose **Sitemap** (default) or **URL list** as the URL source.
 - Enter a base site URL in **Site URL** (used for sitemap fetch and local TLS; keep it aligned with your DDEV host).
 - **Sitemap**: fetches `/sitemap.xml` from the site URL.
-- **URL list**: paste or upload a JSON array of full URLs, e.g. `["https://connect.ddev.site/page-one", "https://connect.ddev.site/page-two"]`. The UI shows how many URLs loaded after parse.
+- **URL list**: paste or upload a JSON array of full URLs, e.g. `["https://example.ddev.site/page-one", "https://example.ddev.site/page-two"]`. The UI shows how many URLs loaded after parse.
 - Use the various fields in the UI to configure the checks you want to run.
 - The fields are:
   - Label: A label for the check. (Useful for the exported report to identify the check)
