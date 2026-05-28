@@ -64,7 +64,7 @@ This comes in handy if you do not have an XML sitemap. It presumes you have some
 Note, Using the pasting JSON method, large URL lists are sent in the POST body. The default JSON limit is **25 MB** (`SITEMAP_SCAN_BODY_LIMIT_MB`). If you see **413 Payload Too Large**, restart the server with a higher value, e.g. `SITEMAP_SCAN_BODY_LIMIT_MB=50 node server.js`.
 
 ## ddev and Drupal
-use `Login as admin first (ddev drush uli)` if you are on a local ddev drupal site and you want to query.
+Use `Login as admin first (ddev drush uli)` if you are on a local ddev drupal site and you want to query URLs behind some sort of access control or login. A `ddev drush uli` command will automatically be used before the search starts.
 
 ## Roadmap
 - ❌ Specify the sitemap link if it differs from the standard `site.com/sitemap.xml` path
