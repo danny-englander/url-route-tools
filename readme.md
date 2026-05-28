@@ -1,9 +1,9 @@
-# Sitemap Route Tools
+# URL Route Tools
 
 ![Screenshot of the UI](screen.png)
 
 ## Introduction
-Sitemap route tools can query an xml sitemap (typically located at https://example.com/sitemap.xml) and check for the presence of selectors on the pages linked in the sitemap. You can also use this on a localhost site, for example, a ddev instance.
+URL route tools can query an xml sitemap (typically located at https://example.com/sitemap.xml) or a JSON list of URLs and check for the presence of selectors on the pages linked in the sitemap. You can also use this on a localhost site, for example, a ddev instance.
 
 ## Installation
 Ensure node 24 is installed or you have nvm installed and use the .nvmrc file to set the correct node version.
@@ -43,8 +43,6 @@ You will see the url in terminal: `http://localhost:3333`
 ## Debugging
 You can enable debugging by checking the "Debug" checkbox. This will log the server logs and the browser console to the terminal.
 
-Large URL lists are sent in the POST body. The default JSON limit is **25 MB** (`SITEMAP_SCAN_BODY_LIMIT_MB`). If you see **413 Payload Too Large**, restart the server with a higher value, e.g. `SITEMAP_SCAN_BODY_LIMIT_MB=50 node server.js`.
-
 ## JSON options (URL list)
 This comes in handy if you do not have an XML sitemap. It presumes you have some way of querying the urls for a site. Paste or upload a JSON formatted file of URls in the format as shown below:
 
@@ -62,6 +60,8 @@ This comes in handy if you do not have an XML sitemap. It presumes you have some
   "https://example.com/api/v1/items"
 ]
 ```
+
+Note, Using the pasting JSON method, large URL lists are sent in the POST body. The default JSON limit is **25 MB** (`SITEMAP_SCAN_BODY_LIMIT_MB`). If you see **413 Payload Too Large**, restart the server with a higher value, e.g. `SITEMAP_SCAN_BODY_LIMIT_MB=50 node server.js`.
 
 ## ddev and Drupal
 use `Login as admin first (ddev drush uli)` if you are on a local ddev drupal site and you want to query.
