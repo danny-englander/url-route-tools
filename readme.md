@@ -45,9 +45,31 @@ You can enable debugging by checking the "Debug" checkbox. This will log the ser
 
 Large URL lists are sent in the POST body. The default JSON limit is **25 MB** (`SITEMAP_SCAN_BODY_LIMIT_MB`). If you see **413 Payload Too Large**, restart the server with a higher value, e.g. `SITEMAP_SCAN_BODY_LIMIT_MB=50 node server.js`.
 
+## JSON options (URL list)
+This comes in handy if you do not have an XML sitemap. It presumes you have some way of querying the urls for a site. Paste or upload a JSON formatted file of URls in the format as shown below:
+
+```json
+[
+  "https://example.com/",
+  "https://example.com/about",
+  "https://example.com/contact",
+  "https://example.com/products",
+  "https://example.com/products/123",
+  "https://example.com/blog",
+  "https://example.com/blog/my-first-post",
+  "https://example.com/search?q=hello+world",
+  "https://example.com/user/profile?id=42",
+  "https://example.com/api/v1/items"
+]
+```
+
+## ddev and Drupal
+use `Login as admin first (ddev drush uli)` if you are on a local ddev drupal site and you want to query.
+
 ## Roadmap
-- Specify the sitemap link if it differs from the standard `site.com/sitemap.xml` path
-- Determine a method to run a `ddev drush uli` command and have the app login if the site requires authentication
-- Show labels for form fields (better UX)
-- Make HTML placeholders more actionable
-- Make Selector field its own line
+- ❌ Specify the sitemap link if it differs from the standard `site.com/sitemap.xml` path
+- ✅ Determine a method to run a `ddev drush uli` command and have the app login if the site requires authentication
+- ❌ Show labels for form fields (better UX)
+- ❌ Make HTML placeholders more actionable
+- ❌ Make Selector field its own line
+- ✅ Allow for JSON upload or paste
