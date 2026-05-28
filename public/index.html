@@ -4,12 +4,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sitemap route tools</title>
+  <title>URL Route Tools</title>
   <link rel="icon" type="image/svg+xml" href="/hexagon.svg" />
   <link
     href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:ital,wght@0,400;0,700;1,400&display=swap"
     rel="stylesheet" />
-  <link id="tailwindStyles" rel="stylesheet" href="/tailwind.css" />
+  <link id="tailwindStyles" rel="stylesheet" href="/styles.css" />
   <style id="themeStyles">
     :root {
       --accent: #eab308;
@@ -71,7 +71,7 @@
       class="flex shrink-0 items-baseline gap-4 border-b border-zinc-800 bg-zinc-900 px-8 py-5">
       <h1
         class="font-display text-4xl leading-none tracking-widest text-yellow-500">
-        Sitemap route tools
+        URL Route Tools
       </h1>
       <h2 class="text-xs tracking-widest text-zinc-400">
         Headless markup checker for websites
@@ -221,8 +221,8 @@
     <form method="dialog" class="m-0 flex flex-col gap-4 p-0">
       <h2 id="appDialogTitle"
         class="font-display text-sm tracking-widest text-yellow-500"></h2>
-      <p id="appDialogMessage"
-        class="text-sm leading-relaxed text-zinc-300"></p>
+      <p id="appDialogMessage" class="text-sm leading-relaxed text-zinc-300">
+      </p>
       <button type="submit" value="ok"
         class="font-display w-full cursor-pointer bg-yellow-500 px-4 py-2.5 text-sm tracking-widest text-zinc-950 transition hover:opacity-90">
         OK
@@ -828,7 +828,7 @@
         try {
           const payload = JSON.parse(evt.data);
           if (payload.type === "tailwind_update" && tailwindLink) {
-            const baseHref = "/tailwind.css";
+            const baseHref = "/styles.css";
             tailwindLink.setAttribute("href", `${baseHref}?v=${Date.now()}`);
           }
         } catch {
