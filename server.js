@@ -417,19 +417,22 @@ async function runDrushUli(baseUrl) {
       ? siteHostname.slice(0, -".ddev.site".length)
       : "";
 
+  // Prefer --uri/--no-browser first: plain `drush uli` often emits http:// links while
+  // scans use https:// (e.g. DDEV), which leaves a cookie but does not stay logged in.
+  const uliWithUri = ["drush", "uli", `--uri=${siteOrigin}`, "--no-browser"];
   if (inferredProjectName) {
     candidates.push(
+      ["exec", "-p", inferredProjectName, ...uliWithUri],
+      ["exec", "--project", inferredProjectName, ...uliWithUri],
       ["exec", "-p", inferredProjectName, "drush", "uli"],
-      ["exec", "-p", inferredProjectName, "drush", "uli", `--uri=${siteOrigin}`, "--no-browser"],
-      ["exec", "--project", inferredProjectName, "drush", "uli"],
-      ["exec", "--project", inferredProjectName, "drush", "uli", `--uri=${siteOrigin}`, "--no-browser"]
+      ["exec", "--project", inferredProjectName, "drush", "uli"]
     );
   }
   candidates.push(
+    ["exec", ...uliWithUri],
+    ["drush", "uli", `--uri=${siteOrigin}`, "--no-browser"],
     ["exec", "drush", "uli"],
-    ["exec", "drush", "uli", `--uri=${siteOrigin}`, "--no-browser"],
-    ["drush", "uli"],
-    ["drush", "uli", `--uri=${siteOrigin}`, "--no-browser"]
+    ["drush", "uli"]
   );
 
   const uniqueCandidates = [];
@@ -460,6 +463,27 @@ async function runDrushUli(baseUrl) {
   throw new Error(
     `Could not generate admin login URL with DDEV/Drush. Tried: ${failures.join(" | ")}`
   );
+}
+
+/** Match ULI link scheme to the site URL (http ULI + https scan breaks Drupal sessions). */
+function alignUliUrlToSite(uliUrl, siteUrl) {
+  try {
+    const uli = new URL(uliUrl);
+    const site = new URL(siteUrl);
+    if (uli.origin === site.origin) return uli.href;
+    return new URL(`${uli.pathname}${uli.search}${uli.hash}`, site.origin).href;
+  } catch {
+    return uliUrl;
+  }
+}
+
+async function verifyDrupalLogin(page, siteUrl, dbg = () => {}) {
+  await page.goto(siteUrl, { waitUntil: "domcontentloaded", timeout: 15000 });
+  const loggedIn = await page.evaluate(() =>
+    document.body?.classList.contains("user-logged-in")
+  );
+  dbg("drupal login body check", loggedIn ? "user-logged-in" : "anonymous");
+  return loggedIn;
 }
 
 // SSE endpoint — streams results back to the UI in real time
@@ -572,20 +596,18 @@ app.post("/scan", async (req, res) => {
 
     if (Boolean(loginWithDrushUli)) {
       if (!send({ type: "status", message: "Generating admin login link..." })) return;
-      const uliUrl = await runDrushUli(siteUrl);
+      const uliUrl = alignUliUrlToSite(await runDrushUli(siteUrl), siteUrl);
       dbg("drush uli generated", uliUrl);
       if (!send({ type: "status", message: "Logging in as admin..." })) return;
       const loginPage = await context.newPage();
+      let loggedIn = false;
       try {
         await loginPage.goto(uliUrl, {
           waitUntil: "domcontentloaded",
           timeout: 20000
         });
         await loginPage.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
-        await loginPage.goto(siteUrl, {
-          waitUntil: "domcontentloaded",
-          timeout: 15000
-        });
+        loggedIn = await verifyDrupalLogin(loginPage, siteUrl, dbg);
       } finally {
         await loginPage.close().catch(() => {});
       }
@@ -598,9 +620,9 @@ app.post("/scan", async (req, res) => {
         authCookies.length > 0 ? "ok" : "missing",
         authCookies.map((c) => c.name).join(",")
       );
-      if (authCookies.length === 0) {
+      if (!loggedIn) {
         throw new Error(
-          "Admin login did not stick (no Drupal session cookie found). Make sure the siteUrl matches the DDEV project's canonical domain."
+          "Admin login did not stick (page is still anonymous after ULI). Use an https Site URL that matches your DDEV project, e.g. https://connect.ddev.site."
         );
       }
       if (!send({ type: "login_verified", cookieCount: authCookies.length })) return;
