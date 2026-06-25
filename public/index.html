@@ -306,7 +306,7 @@
       const list = document.getElementById("checksList");
       const card = document.createElement("div");
       card.className =
-        "check-card grid gap-2 border-b border-dotted border-zinc-600 bg-zinc-800 p-3 pb-4";
+        "check-card grid gap-2 bg-zinc-800 p-3 pb-4";
       card.dataset.id = id;
       card.innerHTML = `
       <input class="w-full border border-zinc-700 bg-zinc-950 px-2.5 py-2 text-xs text-zinc-100 outline-none transition focus:border-yellow-500" type="text" placeholder="Label (e.g. Has cookie banner)" value="${data.label || ""}" data-field="label" />
