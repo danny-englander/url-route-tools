@@ -306,10 +306,9 @@
       const list = document.getElementById("checksList");
       const card = document.createElement("div");
       card.className =
-        "check-card relative grid gap-2 border border-zinc-800 bg-zinc-800 p-3";
+        "check-card grid gap-2 border-b border-dotted border-zinc-600 bg-zinc-800 p-3 pb-4";
       card.dataset.id = id;
       card.innerHTML = `
-      <button class="absolute right-2 top-0 h-7 w-7 cursor-pointer rounded-full bg-yellow-500 pb-px text-2xl leading-none text-zinc-950 transition hover:text-rose-400" onclick="removeCheck(${id})" title="Remove">×</button>
       <input class="w-full border border-zinc-700 bg-zinc-950 px-2.5 py-2 text-xs text-zinc-100 outline-none transition focus:border-yellow-500" type="text" placeholder="Label (e.g. Has cookie banner)" value="${data.label || ""}" data-field="label" />
       <input class="w-full border border-zinc-700 bg-zinc-950 px-2.5 py-2 text-xs text-zinc-100 outline-none transition focus:border-yellow-500" type="text" placeholder="Selector; top-level comma = OR (e.g. .a, #b)" value="${data.selector || ""}" data-field="selector" />
       <select class="w-full border border-zinc-700 bg-zinc-950 px-2.5 py-2 text-xs text-zinc-100 outline-none transition focus:border-yellow-500" data-field="expected">
@@ -336,6 +335,7 @@
           ? data.expected
           : ""
         }" />
+      <button type="button" class="cursor-pointer self-start border border-yellow-500 bg-yellow-500/10 px-3 py-1 text-xs tracking-widest text-yellow-500 transition hover:bg-yellow-500/20" onclick="removeCheck(${id})">Remove</button>
     `;
       card
         .querySelector('[data-field="expected"]')
