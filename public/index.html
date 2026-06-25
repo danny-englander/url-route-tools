@@ -311,21 +311,19 @@
       card.innerHTML = `
       <button class="absolute right-2 top-0 h-7 w-7 cursor-pointer rounded-full bg-yellow-500 pb-px text-2xl leading-none text-zinc-950 transition hover:text-rose-400" onclick="removeCheck(${id})" title="Remove">×</button>
       <input class="w-full border border-zinc-700 bg-zinc-950 px-2.5 py-2 text-xs text-zinc-100 outline-none transition focus:border-yellow-500" type="text" placeholder="Label (e.g. Has cookie banner)" value="${data.label || ""}" data-field="label" />
-      <div class="grid grid-cols-2 gap-2">
-        <input class="w-full border border-zinc-700 bg-zinc-950 px-2.5 py-2 text-xs text-zinc-100 outline-none transition focus:border-yellow-500" type="text" placeholder="Selector; top-level comma = OR (e.g. .a, #b)" value="${data.selector || ""}" data-field="selector" />
-        <select class="w-full border border-zinc-700 bg-zinc-950 px-2.5 py-2 text-xs text-zinc-100 outline-none transition focus:border-yellow-500" data-field="expected">
-          <option value="present" ${data.expected === "present" ? "selected" : ""
+      <input class="w-full border border-zinc-700 bg-zinc-950 px-2.5 py-2 text-xs text-zinc-100 outline-none transition focus:border-yellow-500" type="text" placeholder="Selector; top-level comma = OR (e.g. .a, #b)" value="${data.selector || ""}" data-field="selector" />
+      <select class="w-full border border-zinc-700 bg-zinc-950 px-2.5 py-2 text-xs text-zinc-100 outline-none transition focus:border-yellow-500" data-field="expected">
+        <option value="present" ${data.expected === "present" ? "selected" : ""
         }>Present</option>
-          <option value="absent"  ${data.expected === "absent" ? "selected" : ""
+        <option value="absent"  ${data.expected === "absent" ? "selected" : ""
         }>Absent</option>
-          <option value="custom"  ${data.expected &&
+        <option value="custom"  ${data.expected &&
           data.expected !== "present" &&
           data.expected !== "absent"
           ? "selected"
           : ""
         }>Contains text…</option>
-        </select>
-      </div>
+      </select>
       <input class="w-full border border-zinc-700 bg-zinc-950 px-2.5 py-2 text-xs text-zinc-100 outline-none transition focus:border-yellow-500" type="text" placeholder="Exclude if inside (optional; comma = OR, e.g. #flyout, #modal, .drawer)" value="${data.excludeWithin || ""}" data-field="excludeWithin" />
       <input class="w-full border border-zinc-700 bg-zinc-950 px-2.5 py-2 text-xs text-zinc-100 outline-none transition focus:border-yellow-500" type="text" placeholder='Text to find in element' data-field="textMatch" style="display:${data.expected &&
           data.expected !== "present" &&
