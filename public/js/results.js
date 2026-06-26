@@ -1,5 +1,7 @@
 import { state } from "./state.js";
 
+const hitRowTemplate = document.getElementById("hitRowTemplate");
+
 export function formatSeconds(elapsedMs) {
   return (Math.max(0, elapsedMs) / 1000).toFixed(1);
 }
@@ -9,16 +11,9 @@ export function hasHit(results) {
 }
 
 export function showInitialMessage(message) {
-  const container = document.getElementById("hitsContainer");
-  container.innerHTML = `
-      <div class="flex flex-1 flex-col items-center justify-center gap-3 p-10 text-center text-zinc-400">
-        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="8" y="6" width="32" height="36" rx="2" stroke="#e4e4e7" stroke-width="2" opacity="0.22"/>
-          <path d="M16 16h16M16 22h16M16 28h10" stroke="#e4e4e7" stroke-width="2" stroke-linecap="round" opacity="0.22"/>
-        </svg>
-        <p class="text-sm leading-relaxed">${message}</p>
-      </div>
-    `;
+  document.getElementById("hitsEmptyMessage").innerHTML = message;
+  document.getElementById("hitsEmpty").classList.remove("hidden");
+  document.getElementById("hitsTableWrap").classList.add("hidden");
 }
 
 export function setProgress(done, total) {
@@ -30,51 +25,36 @@ export function setProgress(done, total) {
 export function renderHitsTable(
   emptyMessage = "Scan complete.<br/>No hit URLs matched your checks.",
 ) {
-  const container = document.getElementById("hitsContainer");
-  container.innerHTML = "";
-
   if (!state.hitRows.length) {
     showInitialMessage(emptyMessage);
     return;
   }
 
-  const wrap = document.createElement("div");
-  wrap.className = "overflow-hidden border border-zinc-800 bg-zinc-900";
-  const table = document.createElement("table");
-  table.className = "w-full border-collapse text-xs";
-  table.innerHTML = `
-      <thead class="bg-zinc-800">
-        <tr>
-          <th class="border-b border-zinc-800 px-3 py-2.5 text-left text-xs font-normal uppercase tracking-widest text-zinc-400" style="width:56px">#</th>
-          <th class="border-b border-zinc-800 px-3 py-2.5 text-left text-xs font-normal uppercase tracking-widest text-zinc-400">URL</th>
-          <th class="border-b border-zinc-800 px-3 py-2.5 text-left text-xs font-normal uppercase tracking-widest text-zinc-400" style="width:180px">excludeWithin</th>
-          <th class="border-b border-zinc-800 px-3 py-2.5 text-left text-xs font-normal uppercase tracking-widest text-zinc-400">detail</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    `;
+  document.getElementById("hitsEmpty").classList.add("hidden");
+  document.getElementById("hitsTableWrap").classList.remove("hidden");
 
-  const tbody = table.querySelector("tbody");
+  const tbody = document.getElementById("hitsTableBody");
+  tbody.replaceChildren();
+
   state.hitRows.forEach((row, idx) => {
-    const tr = document.createElement("tr");
-    if (idx % 2 === 1) tr.className = "bg-white/5";
-    const excludeWithinHtml = row.passResults
+    const tr = hitRowTemplate.content.cloneNode(true).firstElementChild;
+    if (idx % 2 === 1) tr.classList.add("bg-white/5");
+
+    tr.querySelector('[data-field="index"]').textContent = String(idx + 1);
+
+    const link = tr.querySelector('[data-field="url"]');
+    link.href = row.url;
+    link.textContent = row.url;
+
+    tr.querySelector('[data-field="excludeWithin"]').innerHTML = row.passResults
       .map((r) => r.excludeWithin || "-")
       .join("<br/>");
-    const detailHtml = row.passResults
+    tr.querySelector('[data-field="detail"]').innerHTML = row.passResults
       .map((r) => r.detail || "-")
       .join("<br/>");
-    tr.innerHTML = `
-        <td class="border-b border-zinc-800 px-3 py-2.5 text-zinc-100">${idx + 1}</td>
-        <td class="border-b border-zinc-800 px-3 py-2.5 text-zinc-100"><a class="break-all text-yellow-500 hover:underline" href="${row.url}" target="_blank" rel="noopener noreferrer">${row.url}</a></td>
-        <td class="border-b border-zinc-800 px-3 py-2.5 text-zinc-300">${excludeWithinHtml}</td>
-        <td class="border-b border-zinc-800 px-3 py-2.5 text-zinc-300">${detailHtml}</td>
-      `;
+
     tbody.appendChild(tr);
   });
-
-  wrap.appendChild(table);
-  container.appendChild(wrap);
 }
 
 export function setStatus(msg) {

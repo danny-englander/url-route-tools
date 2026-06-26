@@ -238,7 +238,75 @@
                 ></div>
               </div>
             </div>
-            <div id="hitsContainer"></div>
+            <div id="hitsContainer">
+              <div
+                id="hitsEmpty"
+                class="flex flex-1 flex-col items-center justify-center gap-3 p-10 text-center text-zinc-400"
+              >
+                <svg
+                  width="48"
+                  height="48"
+                  viewBox="0 0 48 48"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  aria-hidden="true"
+                >
+                  <rect
+                    x="8"
+                    y="6"
+                    width="32"
+                    height="36"
+                    rx="2"
+                    stroke="#e4e4e7"
+                    stroke-width="2"
+                    opacity="0.22"
+                  />
+                  <path
+                    d="M16 16h16M16 22h16M16 28h10"
+                    stroke="#e4e4e7"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    opacity="0.22"
+                  />
+                </svg>
+                <p id="hitsEmptyMessage" class="text-sm leading-relaxed">
+                  No results yet.<br />Enter your DDEV site URL, add selector
+                  checks,<br />and click <strong>SCAN</strong>.
+                </p>
+              </div>
+              <div
+                id="hitsTableWrap"
+                class="hidden overflow-hidden border border-zinc-800 bg-zinc-900"
+              >
+                <table class="w-full border-collapse text-xs">
+                  <thead class="bg-zinc-800">
+                    <tr>
+                      <th
+                        class="w-14 border-b border-zinc-800 px-3 py-2.5 text-left text-xs font-normal uppercase tracking-widest text-zinc-400"
+                      >
+                        #
+                      </th>
+                      <th
+                        class="border-b border-zinc-800 px-3 py-2.5 text-left text-xs font-normal uppercase tracking-widest text-zinc-400"
+                      >
+                        URL
+                      </th>
+                      <th
+                        class="w-[180px] border-b border-zinc-800 px-3 py-2.5 text-left text-xs font-normal uppercase tracking-widest text-zinc-400"
+                      >
+                        excludeWithin
+                      </th>
+                      <th
+                        class="border-b border-zinc-800 px-3 py-2.5 text-left text-xs font-normal uppercase tracking-widest text-zinc-400"
+                      >
+                        detail
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody id="hitsTableBody"></tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </main>
       </div>
@@ -266,6 +334,75 @@
         </button>
       </form>
     </dialog>
+
+    <template id="checkCardTemplate">
+      <div class="check-card grid gap-2 bg-zinc-800 p-3 pb-4">
+        <input
+          class="w-full border border-zinc-700 bg-zinc-950 px-2.5 py-2 text-xs text-zinc-100 outline-none transition focus:border-yellow-500"
+          type="text"
+          placeholder="Label (e.g. Has cookie banner)"
+          data-field="label"
+        />
+        <input
+          class="w-full border border-zinc-700 bg-zinc-950 px-2.5 py-2 text-xs text-zinc-100 outline-none transition focus:border-yellow-500"
+          type="text"
+          placeholder="Selector; top-level comma = OR (e.g. .a, #b)"
+          data-field="selector"
+        />
+        <select
+          class="w-full border border-zinc-700 bg-zinc-950 px-2.5 py-2 text-xs text-zinc-100 outline-none transition focus:border-yellow-500"
+          data-field="expected"
+        >
+          <option value="present">Present</option>
+          <option value="absent">Absent</option>
+          <option value="custom">Contains text…</option>
+        </select>
+        <input
+          class="w-full border border-zinc-700 bg-zinc-950 px-2.5 py-2 text-xs text-zinc-100 outline-none transition focus:border-yellow-500"
+          type="text"
+          placeholder="Exclude if inside (optional; comma = OR, e.g. #flyout, #modal, .drawer)"
+          data-field="excludeWithin"
+        />
+        <input
+          class="hidden w-full border border-zinc-700 bg-zinc-950 px-2.5 py-2 text-xs text-zinc-100 outline-none transition focus:border-yellow-500"
+          type="text"
+          placeholder="Text to find in element"
+          data-field="textMatch"
+        />
+        <button
+          type="button"
+          data-action="remove-check"
+          class="cursor-pointer self-start border border-yellow-500 bg-yellow-500/10 px-3 py-1 text-xs tracking-widest text-yellow-500 transition hover:bg-yellow-500/20"
+        >
+          Remove
+        </button>
+      </div>
+    </template>
+
+    <template id="hitRowTemplate">
+      <tr>
+        <td
+          class="border-b border-zinc-800 px-3 py-2.5 text-zinc-100"
+          data-field="index"
+        ></td>
+        <td class="border-b border-zinc-800 px-3 py-2.5 text-zinc-100">
+          <a
+            class="break-all text-yellow-500 hover:underline"
+            data-field="url"
+            target="_blank"
+            rel="noopener noreferrer"
+          ></a>
+        </td>
+        <td
+          class="border-b border-zinc-800 px-3 py-2.5 text-zinc-300"
+          data-field="excludeWithin"
+        ></td>
+        <td
+          class="border-b border-zinc-800 px-3 py-2.5 text-zinc-300"
+          data-field="detail"
+        ></td>
+      </tr>
+    </template>
 
     <script type="module" src="/js/main.js"></script>
   </body>
