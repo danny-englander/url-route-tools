@@ -13,9 +13,9 @@ npx playwright install
 npm i
 ```
 
-Now run the server:
+Now run the server (builds Tailwind CSS on startup and watches for class changes):
 ```
-node server.js
+npm start
 ```
 You will see the url in terminal: `http://localhost:3333`
 

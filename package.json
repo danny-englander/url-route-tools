@@ -4,8 +4,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "tw:build": "tailwindcss -i ./src/tailwind.css -o ./public/styles.css",
-    "tw:watch": "tailwindcss -i ./src/tailwind.css -o ./public/styles.css --watch",
+    "tw:build": "tailwindcss -i ./src/tailwind.css -o ./public/dist.css",
+    "tw:watch": "tailwindcss -i ./src/tailwind.css -o ./public/dist.css --watch",
+    "start": "node server.js",
     "nsj": "node server.js"
   },
   "type": "module",

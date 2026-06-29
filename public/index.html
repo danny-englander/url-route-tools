@@ -9,7 +9,7 @@
       href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:ital,wght@0,400;0,700;1,400&display=swap"
       rel="stylesheet"
     />
-    <link id="tailwindStyles" rel="stylesheet" href="/styles.css" />
+    <link id="tailwindStyles" rel="stylesheet" href="/dist.css" />
   </head>
 
   <body class="min-h-screen bg-zinc-950 font-body text-zinc-100">
@@ -22,7 +22,7 @@
         >
           URL Route Tools
         </h1>
-        <h2 class="text-xs tracking-widest text-zinc-400">
+        <h2 class="text-sm tracking-widest text-zinc-400">
           Headless markup checker for websites
         </h2>
       </header>
@@ -32,14 +32,14 @@
           class="theme-scroll flex w-[32rem] shrink-0 flex-col gap-6 overflow-y-auto border-r border-zinc-800 bg-zinc-900 px-6 py-7"
         >
           <fieldset class="m-0 flex flex-col gap-2 border-0 p-0">
-            <legend class="text-xs uppercase tracking-widest text-zinc-400">
+            <legend class="text-sm uppercase tracking-widest text-zinc-400">
               URL source
             </legend>
             <div class="grid grid-cols-2 border border-zinc-800" role="group">
               <button
                 type="button"
                 id="urlSourceSitemap"
-                class="url-source-tab cursor-pointer border-r border-zinc-800 bg-yellow-500/15 px-2 py-2 text-xs tracking-widest text-yellow-500"
+                class="url-source-tab cursor-pointer border-r border-zinc-800 bg-yellow-500/15 px-2 py-2 text-sm tracking-widest text-yellow-500"
                 data-mode="sitemap"
               >
                 Sitemap
@@ -47,7 +47,7 @@
               <button
                 type="button"
                 id="urlSourceList"
-                class="url-source-tab cursor-pointer bg-zinc-950 px-2 py-2 text-xs tracking-widest text-zinc-400 transition hover:text-zinc-200"
+                class="url-source-tab cursor-pointer bg-zinc-950 px-2 py-2 text-sm tracking-widest text-zinc-400 transition hover:text-zinc-200"
                 data-mode="urlList"
               >
                 URL list
@@ -58,7 +58,7 @@
           <div class="flex flex-col gap-2">
             <label
               for="siteUrl"
-              class="text-xs uppercase tracking-widest text-zinc-400"
+              class="text-sm uppercase tracking-widest text-zinc-400"
               >Site URL</label
             >
             <input
@@ -67,7 +67,7 @@
               placeholder="http://mysite.ddev.site"
               class="w-full border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none transition focus:border-yellow-500"
             />
-            <p id="sitemapHint" class="text-xs leading-relaxed text-zinc-500">
+            <p id="sitemapHint" class="text-sm leading-relaxed text-zinc-500">
               Fetches <code class="text-zinc-400">/sitemap.xml</code> from this
               host (local TLS uses this URL).
             </p>
@@ -80,7 +80,7 @@
             <div class="flex flex-col gap-1.5">
               <label
                 for="urlListFile"
-                class="text-xs uppercase tracking-widest text-zinc-400"
+                class="text-sm uppercase tracking-widest text-zinc-400"
                 >JSON file</label
               >
               <input
@@ -91,19 +91,19 @@
               />
               <label
                 for="urlListFile"
-                class="block w-full cursor-pointer border border-yellow-500 bg-yellow-500/10 px-3 py-2 text-center text-xs tracking-widest text-yellow-500 transition hover:bg-yellow-500/20"
+                class="block w-full cursor-pointer border border-yellow-500 bg-yellow-500/10 px-3 py-2 text-center text-sm tracking-widest text-yellow-500 transition hover:bg-yellow-500/20"
               >
                 Choose JSON file…
               </label>
               <span
                 id="urlListFileName"
-                class="hidden truncate text-xs text-zinc-500"
+                class="hidden truncate text-sm text-zinc-500"
               ></span>
             </div>
-            <p class="text-center text-xs text-zinc-500">— or paste —</p>
+            <p class="text-center text-sm text-zinc-500">— or paste —</p>
             <label
               for="urlListJson"
-              class="text-xs uppercase tracking-widest text-zinc-400"
+              class="text-sm uppercase tracking-widest text-zinc-400"
               >URL list (JSON)</label
             >
             <textarea
@@ -111,9 +111,9 @@
               rows="8"
               spellcheck="false"
               placeholder='Paste JSON array, e.g. ["https://mysite.ddev.site/about", …]'
-              class="w-full resize-y border border-zinc-800 bg-zinc-900 px-2 py-2 font-mono text-xs leading-relaxed text-zinc-100 outline-none transition focus:border-yellow-500"
+              class="w-full resize-y border border-zinc-800 bg-zinc-900 px-2 py-2 font-mono text-sm leading-relaxed text-zinc-100 outline-none transition focus:border-yellow-500"
             ></textarea>
-            <p class="text-xs leading-relaxed text-zinc-500">
+            <p class="text-sm leading-relaxed text-zinc-500">
               <button
                 type="button"
                 id="urlListSampleBtn"
@@ -128,20 +128,20 @@
             </p>
             <p
               id="urlListStatus"
-              class="min-h-[1.25rem] text-xs text-zinc-400"
+              class="min-h-[1.25rem] text-sm text-zinc-400"
               aria-live="polite"
             ></p>
           </div>
 
           <div>
             <div class="mb-3 flex items-center justify-between">
-              <span class="text-xs uppercase tracking-widest text-zinc-400"
+              <span class="text-sm uppercase tracking-widest text-zinc-400"
                 >Selector Checks</span
               >
               <button
                 type="button"
                 id="addCheckBtn"
-                class="cursor-pointer border border-yellow-500 bg-yellow-500/10 px-3 py-1 text-xs tracking-widest text-yellow-500 transition hover:bg-yellow-500/20"
+                class="cursor-pointer border border-yellow-500 bg-yellow-500/10 px-3 py-1 text-sm tracking-widest text-yellow-500 transition hover:bg-yellow-500/20"
               >
                 + Add more checks
               </button>
@@ -152,7 +152,7 @@
           <div class="flex flex-col gap-1.5">
             <label
               for="debugScan"
-              class="text-xs uppercase tracking-widest text-zinc-400"
+              class="text-sm uppercase tracking-widest text-zinc-400"
               >Debug (server log + browser console)</label
             >
             <input
@@ -164,7 +164,7 @@
           <div class="flex flex-col gap-1.5">
             <label
               for="loginWithDrushUli"
-              class="text-xs uppercase tracking-widest text-zinc-400"
+              class="text-sm uppercase tracking-widest text-zinc-400"
               >Login as admin first (ddev drush uli)</label
             >
             <input
@@ -184,7 +184,7 @@
           <button
             type="button"
             id="cancelBtn"
-            class="hidden w-full cursor-pointer border border-rose-400 px-3 py-2 text-xs tracking-widest text-rose-400"
+            class="hidden w-full cursor-pointer border border-rose-400 px-3 py-2 text-sm tracking-widest text-rose-400"
           >
             CANCEL SCAN
           </button>
@@ -194,31 +194,31 @@
           <div
             class="flex shrink-0 items-center gap-5 border-b border-zinc-800 bg-zinc-900 px-6 py-3.5"
           >
-            <div class="flex items-center gap-1.5 text-xs">
+            <div class="flex items-center gap-1.5 text-sm">
               <div class="h-2 w-2 rounded-full bg-emerald-400"></div>
               <span class="font-bold text-zinc-100" id="countPass">0</span>
               <span class="text-zinc-400">hits</span>
             </div>
-            <div class="flex items-center gap-1.5 text-xs">
+            <div class="flex items-center gap-1.5 text-sm">
               <div class="h-2 w-2 rounded-full bg-rose-400"></div>
               <span class="font-bold text-zinc-100" id="countFail">0</span>
               <span class="text-zinc-400">misses</span>
             </div>
-            <div class="flex items-center gap-1.5 text-xs">
+            <div class="flex items-center gap-1.5 text-sm">
               <div class="h-2 w-2 rounded-full bg-orange-400"></div>
               <span class="font-bold text-zinc-100" id="countError">0</span>
               <span class="text-zinc-400">errors</span>
             </div>
             <div
               id="loginVerifiedBadge"
-              class="hidden items-center gap-1.5 rounded border border-emerald-500/40 bg-emerald-500/10 px-2 py-0.5 text-xs text-emerald-400"
+              class="hidden items-center gap-1.5 rounded border border-emerald-500/40 bg-emerald-500/10 px-2 py-0.5 text-sm text-emerald-400"
               title="Drupal session cookie present — scan is running as admin"
             >
               <div class="h-2 w-2 rounded-full bg-emerald-400"></div>
               <span class="font-semibold tracking-wide">Login verified</span>
             </div>
             <span
-              class="ml-auto text-xs italic tracking-widest text-zinc-400"
+              class="ml-auto text-sm italic tracking-widest text-zinc-400"
               id="statusMsg"
               >Configure checks and click SCAN</span
             >
@@ -226,7 +226,7 @@
               type="button"
               id="exportBtn"
               disabled
-              class="cursor-pointer border border-zinc-700 px-3 py-1.5 text-xs tracking-widest text-zinc-400 transition hover:border-yellow-500 hover:text-yellow-500 disabled:cursor-not-allowed disabled:opacity-40"
+              class="cursor-pointer border border-zinc-700 px-3 py-1.5 text-sm tracking-widest text-zinc-400 transition hover:border-yellow-500 hover:text-yellow-500 disabled:cursor-not-allowed disabled:opacity-40"
             >
               EXPORT JSON
             </button>
@@ -240,7 +240,7 @@
               class="hidden border border-zinc-800 bg-zinc-900 p-3.5"
             >
               <div
-                class="mb-2.5 flex justify-between gap-4 text-xs uppercase tracking-widest text-zinc-400"
+                class="mb-2.5 flex justify-between gap-4 text-sm uppercase tracking-widest text-zinc-400"
               >
                 <span id="progressLabel">Preparing scan…</span>
                 <span id="progressCount">0 / 0</span>
@@ -294,26 +294,26 @@
                 id="hitsTableWrap"
                 class="hidden overflow-hidden border border-zinc-800 bg-zinc-900"
               >
-                <table class="w-full border-collapse text-xs">
+                <table class="w-full border-collapse text-sm">
                   <thead class="bg-zinc-800">
                     <tr>
                       <th
-                        class="w-14 border-b border-zinc-800 px-3 py-2.5 text-left text-xs font-normal uppercase tracking-widest text-zinc-400"
+                        class="w-14 border-b border-zinc-800 px-3 py-2.5 text-left text-sm font-normal uppercase tracking-widest text-zinc-400"
                       >
                         #
                       </th>
                       <th
-                        class="border-b border-zinc-800 px-3 py-2.5 text-left text-xs font-normal uppercase tracking-widest text-zinc-400"
+                        class="border-b border-zinc-800 px-3 py-2.5 text-left text-sm font-normal uppercase tracking-widest text-zinc-400"
                       >
                         URL
                       </th>
                       <th
-                        class="w-[180px] border-b border-zinc-800 px-3 py-2.5 text-left text-xs font-normal uppercase tracking-widest text-zinc-400"
+                        class="w-[180px] border-b border-zinc-800 px-3 py-2.5 text-left text-sm font-normal uppercase tracking-widest text-zinc-400"
                       >
                         excludeWithin
                       </th>
                       <th
-                        class="border-b border-zinc-800 px-3 py-2.5 text-left text-xs font-normal uppercase tracking-widest text-zinc-400"
+                        class="border-b border-zinc-800 px-3 py-2.5 text-left text-sm font-normal uppercase tracking-widest text-zinc-400"
                       >
                         detail
                       </th>
@@ -356,11 +356,11 @@
         <div class="flex flex-col gap-1">
           <label
             data-label-for="label"
-            class="text-xs uppercase tracking-widest text-zinc-400"
+            class="text-sm uppercase tracking-widest text-zinc-400"
             >Label</label
           >
           <input
-            class="w-full border border-zinc-700 bg-zinc-950 px-2.5 py-2 text-xs text-zinc-100 outline-none transition focus:border-yellow-500"
+            class="w-full border border-zinc-700 bg-zinc-950 px-2.5 py-2 text-sm text-zinc-100 outline-none transition focus:border-yellow-500"
             type="text"
             placeholder="e.g. Has cookie banner"
             data-field="label"
@@ -369,11 +369,11 @@
         <div class="flex flex-col gap-1">
           <label
             data-label-for="selector"
-            class="text-xs uppercase tracking-widest text-zinc-400"
+            class="text-sm uppercase tracking-widest text-zinc-400"
             >Selector</label
           >
           <input
-            class="w-full border border-zinc-700 bg-zinc-950 px-2.5 py-2 text-xs text-zinc-100 outline-none transition focus:border-yellow-500"
+            class="w-full border border-zinc-700 bg-zinc-950 px-2.5 py-2 text-sm text-zinc-100 outline-none transition focus:border-yellow-500"
             type="text"
             placeholder="Top-level comma = OR (e.g. .a, #b)"
             data-field="selector"
@@ -382,11 +382,11 @@
         <div class="flex flex-col gap-1">
           <label
             data-label-for="expected"
-            class="text-xs uppercase tracking-widest text-zinc-400"
+            class="text-sm uppercase tracking-widest text-zinc-400"
             >Expected</label
           >
           <select
-            class="w-full border border-zinc-700 bg-zinc-950 px-2.5 py-2 text-xs text-zinc-100 outline-none transition focus:border-yellow-500"
+            class="w-full border border-zinc-700 bg-zinc-950 px-2.5 py-2 text-sm text-zinc-100 outline-none transition focus:border-yellow-500"
             data-field="expected"
           >
             <option value="present">Present</option>
@@ -397,11 +397,11 @@
         <div class="flex flex-col gap-1">
           <label
             data-label-for="excludeWithin"
-            class="text-xs uppercase tracking-widest text-zinc-400"
+            class="text-sm uppercase tracking-widest text-zinc-400"
             >Exclude if inside</label
           >
           <input
-            class="w-full border border-zinc-700 bg-zinc-950 px-2.5 py-2 text-xs text-zinc-100 outline-none transition focus:border-yellow-500"
+            class="w-full border border-zinc-700 bg-zinc-950 px-2.5 py-2 text-sm text-zinc-100 outline-none transition focus:border-yellow-500"
             type="text"
             placeholder="Optional; comma = OR (e.g. #flyout, #modal, .drawer)"
             data-field="excludeWithin"
@@ -410,11 +410,11 @@
         <div data-field-group="textMatch" class="hidden flex flex-col gap-1">
           <label
             data-label-for="textMatch"
-            class="text-xs uppercase tracking-widest text-zinc-400"
+            class="text-sm uppercase tracking-widest text-zinc-400"
             >Text to find</label
           >
           <input
-            class="w-full border border-zinc-700 bg-zinc-950 px-2.5 py-2 text-xs text-zinc-100 outline-none transition focus:border-yellow-500"
+            class="w-full border border-zinc-700 bg-zinc-950 px-2.5 py-2 text-sm text-zinc-100 outline-none transition focus:border-yellow-500"
             type="text"
             placeholder="Text to find in element"
             data-field="textMatch"
@@ -423,7 +423,7 @@
         <button
           type="button"
           data-action="remove-check"
-          class="cursor-pointer self-start border border-yellow-500 bg-yellow-500/10 px-3 py-1 text-xs tracking-widest text-yellow-500 transition hover:bg-yellow-500/20"
+          class="cursor-pointer self-start border border-yellow-500 bg-yellow-500/10 px-3 py-1 text-sm tracking-widest text-yellow-500 transition hover:bg-yellow-500/20"
         >
           Remove
         </button>

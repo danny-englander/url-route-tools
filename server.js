@@ -6,7 +6,7 @@ import { Agent } from "undici";
 import { watch } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 
 const app = express();
 app.use(cors());
@@ -48,16 +48,63 @@ function sendHmrEvent(payload) {
   }
 }
 
+const tailwindBin = path.join(__dirname, "node_modules", ".bin", "tailwindcss");
+const tailwindInput = path.join(__dirname, "src", "tailwind.css");
+const tailwindOutput = path.join(__dirname, "public", "dist.css");
+
+function runTailwindBuild() {
+  const result = spawnSync(
+    tailwindBin,
+    ["-i", tailwindInput, "-o", tailwindOutput],
+    { cwd: __dirname, stdio: "inherit", env: process.env },
+  );
+  if (result.error) {
+    console.error(
+      "Tailwind build failed. Run npm install to install devDependencies.",
+    );
+    console.error(result.error.message);
+    process.exit(1);
+  }
+  if (result.status !== 0) {
+    process.exit(result.status ?? 1);
+  }
+}
+
+function startTailwindWatch() {
+  const child = spawn(
+    tailwindBin,
+    ["-i", tailwindInput, "-o", tailwindOutput, "--watch"],
+    { cwd: __dirname, stdio: "inherit", env: process.env },
+  );
+  child.on("error", (err) => {
+    console.error(
+      "Tailwind watch failed. Run npm install to install devDependencies.",
+    );
+    console.error(err.message);
+    process.exit(1);
+  });
+  return child;
+}
+
+let tailwindWatch;
 let tailwindDebounceTimer;
 
 watch(path.join(__dirname, "public"), { persistent: true }, (eventType, filename) => {
-  if (filename !== "tailwind.css") return;
+  if (filename !== "dist.css") return;
   if (eventType !== "change" && eventType !== "rename") return;
   clearTimeout(tailwindDebounceTimer);
   tailwindDebounceTimer = setTimeout(() => {
     sendHmrEvent({ type: "tailwind_update" });
   }, 50);
 });
+
+function shutdown(signal) {
+  tailwindWatch?.kill(signal);
+  process.exit(0);
+}
+
+process.on("SIGINT", () => shutdown("SIGINT"));
+process.on("SIGTERM", () => shutdown("SIGTERM"));
 
 app.get("/hmr", (req, res) => {
   res.setHeader("Content-Type", "text/event-stream");
@@ -764,9 +811,14 @@ app.post("/scan", async (req, res) => {
   }
 });
 
+console.log("Building Tailwind CSS…");
+runTailwindBuild();
+tailwindWatch = startTailwindWatch();
+
 app.listen(3333, () => {
   console.log("✅ Server running at http://localhost:3333");
   console.log(`   POST /scan JSON body limit: ${jsonBodyLimit}`);
+  console.log("   Tailwind watch active (public/dist.css rebuilds on change)");
   if (DEBUG_ENV) {
     console.log("🐛 Debug logging on (SITEMAP_CHECKER_DEBUG=1 or DEBUG=sitemap-checker)");
   }

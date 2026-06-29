@@ -7,7 +7,7 @@ export function setupStyleHmr() {
     try {
       const payload = JSON.parse(evt.data);
       if (payload.type === "tailwind_update" && tailwindLink) {
-        const baseHref = "/styles.css";
+        const baseHref = "/dist.css";
         tailwindLink.setAttribute("href", `${baseHref}?v=${Date.now()}`);
       }
     } catch {
