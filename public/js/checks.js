@@ -9,13 +9,40 @@ export const defaults = [
 ];
 
 const checkCardTemplate = document.getElementById("checkCardTemplate");
+const checkFieldNames = [
+  "label",
+  "selector",
+  "expected",
+  "excludeWithin",
+  "textMatch",
+];
 
 function isCustomExpected(expected) {
   return expected && expected !== "present" && expected !== "absent";
 }
 
+function wireCheckCardFields(card, id) {
+  for (const field of checkFieldNames) {
+    const control = card.querySelector(`[data-field="${field}"]`);
+    const fieldId = `check-${id}-${field}`;
+    control.id = fieldId;
+
+    const label = card.querySelector(`[data-label-for="${field}"]`);
+    if (label) label.htmlFor = fieldId;
+  }
+}
+
+function setTextMatchVisible(card, visible) {
+  card
+    .querySelector('[data-field-group="textMatch"]')
+    ?.classList.toggle("hidden", !visible);
+}
+
 export function addCheck(data = {}) {
+  const id = Date.now();
   const card = checkCardTemplate.content.cloneNode(true).firstElementChild;
+  card.dataset.id = id;
+  wireCheckCardFields(card, id);
 
   card.querySelector('[data-field="label"]').value = data.label || "";
   card.querySelector('[data-field="selector"]').value = data.selector || "";
@@ -28,14 +55,14 @@ export function addCheck(data = {}) {
   if (isCustomExpected(data.expected)) {
     expectedSelect.value = "custom";
     textMatch.value = data.expected;
-    textMatch.classList.remove("hidden");
+    setTextMatchVisible(card, true);
   } else {
     expectedSelect.value = data.expected || "present";
-    textMatch.classList.add("hidden");
+    setTextMatchVisible(card, false);
   }
 
   expectedSelect.addEventListener("change", function () {
-    textMatch.classList.toggle("hidden", this.value !== "custom");
+    setTextMatchVisible(card, this.value === "custom");
   });
 
   document.getElementById("checksList").appendChild(card);

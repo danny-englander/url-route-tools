@@ -31,15 +31,11 @@
         <aside
           class="theme-scroll flex w-96 shrink-0 flex-col gap-6 overflow-y-auto border-r border-zinc-800 bg-zinc-900 px-6 py-7"
         >
-          <div class="flex flex-col gap-2">
-            <span class="text-xs uppercase tracking-widest text-zinc-400"
-              >URL source</span
-            >
-            <div
-              class="grid grid-cols-2 border border-zinc-800"
-              role="group"
-              aria-label="URL source"
-            >
+          <fieldset class="m-0 flex flex-col gap-2 border-0 p-0">
+            <legend class="text-xs uppercase tracking-widest text-zinc-400">
+              URL source
+            </legend>
+            <div class="grid grid-cols-2 border border-zinc-800" role="group">
               <button
                 type="button"
                 id="urlSourceSitemap"
@@ -57,10 +53,12 @@
                 URL list
               </button>
             </div>
-          </div>
+          </fieldset>
 
           <div class="flex flex-col gap-2">
-            <label class="text-xs uppercase tracking-widest text-zinc-400"
+            <label
+              for="siteUrl"
+              class="text-xs uppercase tracking-widest text-zinc-400"
               >Site URL</label
             >
             <input
@@ -80,6 +78,11 @@
             class="hidden flex flex-col gap-2.5 border border-zinc-800 bg-zinc-950 p-3"
           >
             <div class="flex flex-col gap-1.5">
+              <label
+                for="urlListFile"
+                class="text-xs uppercase tracking-widest text-zinc-400"
+                >JSON file</label
+              >
               <input
                 type="file"
                 id="urlListFile"
@@ -98,6 +101,11 @@
               ></span>
             </div>
             <p class="text-center text-xs text-zinc-500">— or paste —</p>
+            <label
+              for="urlListJson"
+              class="text-xs uppercase tracking-widest text-zinc-400"
+              >URL list (JSON)</label
+            >
             <textarea
               id="urlListJson"
               rows="8"
@@ -141,22 +149,30 @@
             <div class="flex flex-col gap-2.5" id="checksList"></div>
           </div>
 
-          <label
-            class="flex cursor-pointer items-center gap-2 text-xs text-zinc-400"
-          >
-            <input type="checkbox" id="debugScan" class="accent-yellow-500" />
-            <span>Debug (server log + browser console)</span>
-          </label>
-          <label
-            class="flex cursor-pointer items-center gap-2 text-xs text-zinc-400"
-          >
+          <div class="flex flex-col gap-1.5">
+            <label
+              for="debugScan"
+              class="text-xs uppercase tracking-widest text-zinc-400"
+              >Debug (server log + browser console)</label
+            >
+            <input
+              type="checkbox"
+              id="debugScan"
+              class="accent-yellow-500 self-start"
+            />
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <label
+              for="loginWithDrushUli"
+              class="text-xs uppercase tracking-widest text-zinc-400"
+              >Login as admin first (ddev drush uli)</label
+            >
             <input
               type="checkbox"
               id="loginWithDrushUli"
-              class="accent-yellow-500"
+              class="accent-yellow-500 self-start"
             />
-            <span>Login as admin first (ddev drush uli)</span>
-          </label>
+          </div>
 
           <button
             type="button"
@@ -337,38 +353,73 @@
 
     <template id="checkCardTemplate">
       <div class="check-card grid gap-2 bg-zinc-800 p-3 pb-4">
-        <input
-          class="w-full border border-zinc-700 bg-zinc-950 px-2.5 py-2 text-xs text-zinc-100 outline-none transition focus:border-yellow-500"
-          type="text"
-          placeholder="Label (e.g. Has cookie banner)"
-          data-field="label"
-        />
-        <input
-          class="w-full border border-zinc-700 bg-zinc-950 px-2.5 py-2 text-xs text-zinc-100 outline-none transition focus:border-yellow-500"
-          type="text"
-          placeholder="Selector; top-level comma = OR (e.g. .a, #b)"
-          data-field="selector"
-        />
-        <select
-          class="w-full border border-zinc-700 bg-zinc-950 px-2.5 py-2 text-xs text-zinc-100 outline-none transition focus:border-yellow-500"
-          data-field="expected"
-        >
-          <option value="present">Present</option>
-          <option value="absent">Absent</option>
-          <option value="custom">Contains text…</option>
-        </select>
-        <input
-          class="w-full border border-zinc-700 bg-zinc-950 px-2.5 py-2 text-xs text-zinc-100 outline-none transition focus:border-yellow-500"
-          type="text"
-          placeholder="Exclude if inside (optional; comma = OR, e.g. #flyout, #modal, .drawer)"
-          data-field="excludeWithin"
-        />
-        <input
-          class="hidden w-full border border-zinc-700 bg-zinc-950 px-2.5 py-2 text-xs text-zinc-100 outline-none transition focus:border-yellow-500"
-          type="text"
-          placeholder="Text to find in element"
-          data-field="textMatch"
-        />
+        <div class="flex flex-col gap-1">
+          <label
+            data-label-for="label"
+            class="text-xs uppercase tracking-widest text-zinc-400"
+            >Label</label
+          >
+          <input
+            class="w-full border border-zinc-700 bg-zinc-950 px-2.5 py-2 text-xs text-zinc-100 outline-none transition focus:border-yellow-500"
+            type="text"
+            placeholder="e.g. Has cookie banner"
+            data-field="label"
+          />
+        </div>
+        <div class="flex flex-col gap-1">
+          <label
+            data-label-for="selector"
+            class="text-xs uppercase tracking-widest text-zinc-400"
+            >Selector</label
+          >
+          <input
+            class="w-full border border-zinc-700 bg-zinc-950 px-2.5 py-2 text-xs text-zinc-100 outline-none transition focus:border-yellow-500"
+            type="text"
+            placeholder="Top-level comma = OR (e.g. .a, #b)"
+            data-field="selector"
+          />
+        </div>
+        <div class="flex flex-col gap-1">
+          <label
+            data-label-for="expected"
+            class="text-xs uppercase tracking-widest text-zinc-400"
+            >Expected</label
+          >
+          <select
+            class="w-full border border-zinc-700 bg-zinc-950 px-2.5 py-2 text-xs text-zinc-100 outline-none transition focus:border-yellow-500"
+            data-field="expected"
+          >
+            <option value="present">Present</option>
+            <option value="absent">Absent</option>
+            <option value="custom">Contains text…</option>
+          </select>
+        </div>
+        <div class="flex flex-col gap-1">
+          <label
+            data-label-for="excludeWithin"
+            class="text-xs uppercase tracking-widest text-zinc-400"
+            >Exclude if inside</label
+          >
+          <input
+            class="w-full border border-zinc-700 bg-zinc-950 px-2.5 py-2 text-xs text-zinc-100 outline-none transition focus:border-yellow-500"
+            type="text"
+            placeholder="Optional; comma = OR (e.g. #flyout, #modal, .drawer)"
+            data-field="excludeWithin"
+          />
+        </div>
+        <div data-field-group="textMatch" class="hidden flex flex-col gap-1">
+          <label
+            data-label-for="textMatch"
+            class="text-xs uppercase tracking-widest text-zinc-400"
+            >Text to find</label
+          >
+          <input
+            class="w-full border border-zinc-700 bg-zinc-950 px-2.5 py-2 text-xs text-zinc-100 outline-none transition focus:border-yellow-500"
+            type="text"
+            placeholder="Text to find in element"
+            data-field="textMatch"
+          />
+        </div>
         <button
           type="button"
           data-action="remove-check"
