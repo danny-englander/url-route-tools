@@ -21,6 +21,7 @@ function setScanningState(scanning) {
   state.isScanning = scanning;
   const runBtn = document.getElementById("runBtn");
   const cancelBtn = document.getElementById("cancelBtn");
+  const cancelNote = document.getElementById("cancelNote");
 
   runBtn.textContent = scanning ? "SCANNING…" : "SCAN";
   runBtn.disabled = scanning;
@@ -30,6 +31,7 @@ function setScanningState(scanning) {
 
   cancelBtn.classList.toggle("hidden", !scanning);
   cancelBtn.disabled = false;
+  cancelNote.classList.toggle("hidden", !scanning);
 }
 
 // ── SSE event handler ───────────────────────────────────────────────────────
