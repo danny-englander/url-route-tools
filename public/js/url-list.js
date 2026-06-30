@@ -68,7 +68,7 @@ export function updateUrlListStatus() {
   if (!text.trim()) {
     state.parsedUrlList = null;
     statusEl.textContent = "";
-    statusEl.className = "min-h-[1.25rem] text-xs text-zinc-400";
+    statusEl.className = "min-h-[1.25rem] text-xs text-zinc-100";
     return;
   }
   const result = parseUrlListText(text);
@@ -99,7 +99,7 @@ function setUrlSourceMode(mode) {
   const active =
     "url-source-tab cursor-pointer bg-yellow-500/15 px-2 py-2 text-xs tracking-widest text-yellow-500";
   const inactive =
-    "url-source-tab cursor-pointer bg-zinc-950 px-2 py-2 text-xs tracking-widest text-zinc-400 transition hover:text-zinc-200";
+    "url-source-tab cursor-pointer bg-zinc-950 px-2 py-2 text-xs tracking-widest text-zinc-100 transition hover:text-zinc-200";
 
   if (mode === "sitemap") {
     sitemapBtn.className = `${active} border-r border-zinc-800`;
