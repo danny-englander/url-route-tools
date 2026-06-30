@@ -394,19 +394,6 @@
             <option value="custom">Contains text…</option>
           </select>
         </div>
-        <div class="flex flex-col gap-1">
-          <label
-            data-label-for="excludeWithin"
-            class="text-sm uppercase tracking-widest text-zinc-100"
-            >Exclude if inside</label
-          >
-          <input
-            class="w-full border border-zinc-700 bg-zinc-950 px-2.5 py-2 text-sm text-zinc-100 outline-none transition focus:border-yellow-500"
-            type="text"
-            placeholder="Optional; comma = OR (e.g. #flyout, #modal, .drawer)"
-            data-field="excludeWithin"
-          />
-        </div>
         <div data-field-group="textMatch" class="hidden flex flex-col gap-1">
           <label
             data-label-for="textMatch"
@@ -418,6 +405,19 @@
             type="text"
             placeholder="Text to find in element"
             data-field="textMatch"
+          />
+        </div>
+        <div class="flex flex-col gap-1">
+          <label
+            data-label-for="excludeWithin"
+            class="text-sm uppercase tracking-widest text-zinc-100"
+            >Exclude if inside</label
+          >
+          <input
+            class="w-full border border-zinc-700 bg-zinc-950 px-2.5 py-2 text-sm text-zinc-100 outline-none transition focus:border-yellow-500"
+            type="text"
+            placeholder="Optional; comma = OR (e.g. #flyout, #modal, .drawer)"
+            data-field="excludeWithin"
           />
         </div>
         <button
