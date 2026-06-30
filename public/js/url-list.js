@@ -1,8 +1,8 @@
 import { state } from "./state.js";
 
 const URL_LIST_SAMPLE = `[
-  "https://connect.ddev.site/page-one",
-  "https://connect.ddev.site/page-two"
+  "https://example.ddev.site/page-one",
+  "https://example.ddev.site/page-two"
 ]`;
 
 export function getUrlSourceMode() {
