@@ -89,14 +89,18 @@ function startTailwindWatch() {
 let tailwindWatch;
 let tailwindDebounceTimer;
 
-watch(path.join(__dirname, "public"), { persistent: true }, (eventType, filename) => {
-  if (filename !== "dist.css") return;
-  if (eventType !== "change" && eventType !== "rename") return;
-  clearTimeout(tailwindDebounceTimer);
-  tailwindDebounceTimer = setTimeout(() => {
-    sendHmrEvent({ type: "tailwind_update" });
-  }, 50);
-});
+watch(
+  path.join(__dirname, "public"),
+  { persistent: true },
+  (eventType, filename) => {
+    if (filename !== "dist.css") return;
+    if (eventType !== "change" && eventType !== "rename") return;
+    clearTimeout(tailwindDebounceTimer);
+    tailwindDebounceTimer = setTimeout(() => {
+      sendHmrEvent({ type: "tailwind_update" });
+    }, 50);
+  },
+);
 
 function shutdown(signal) {
   tailwindWatch?.kill(signal);
@@ -157,7 +161,10 @@ function asArray(v) {
 async function fetchSitemap(url, dbg = () => {}) {
   const timeoutMs = Number(process.env.SITEMAP_FETCH_TIMEOUT_MS || 15000);
   const t0 = Date.now();
-  dbg("fetch start", url, { timeoutMs, insecureTls: allowInsecureTlsForUrl(url) });
+  dbg("fetch start", url, {
+    timeoutMs,
+    insecureTls: allowInsecureTlsForUrl(url),
+  });
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   const opts = allowInsecureTlsForUrl(url)
@@ -168,7 +175,13 @@ async function fetchSitemap(url, dbg = () => {}) {
     dbg("fetch ok", url, res.status, `${Date.now() - t0}ms`);
     return res;
   } catch (e) {
-    dbg("fetch error", url, e.message, e.cause?.message || "", `${Date.now() - t0}ms`);
+    dbg(
+      "fetch error",
+      url,
+      e.message,
+      e.cause?.message || "",
+      `${Date.now() - t0}ms`,
+    );
     throw e;
   } finally {
     clearTimeout(timer);
@@ -190,7 +203,8 @@ function rewriteUrlToBaseOrigin(url, baseUrl) {
   try {
     const base = new URL(baseUrl);
     const parsed = new URL(url, base);
-    return new URL(`${parsed.pathname}${parsed.search}${parsed.hash}`, base).href;
+    return new URL(`${parsed.pathname}${parsed.search}${parsed.hash}`, base)
+      .href;
   } catch {
     return url;
   }
@@ -293,7 +307,11 @@ async function queryElementsMatchingSelector(page, selector) {
       errors.push(`${p}: ${e.message}`);
     }
   }
-  if (parts.length > 0 && merged.length === 0 && errors.length === parts.length) {
+  if (
+    parts.length > 0 &&
+    merged.length === 0 &&
+    errors.length === parts.length
+  ) {
     throw new Error(`Invalid selector list: ${errors.join("; ")}`);
   }
   return dedupeElementHandles(merged);
@@ -336,28 +354,34 @@ async function fetchAllUrls(baseUrl, onStatus = () => {}, dbg = () => {}) {
     onStatus(`Found ${sitemapUrls.length} child sitemap(s)...`);
 
     const errors = [];
-    const urlGroups = await mapWithConcurrency(sitemapUrls, 8, async (url, idx) => {
-      try {
-        const subRes = await fetchSitemap(url, dbg);
-        if (!subRes.ok) {
-          throw new Error(`Sub-sitemap fetch failed (${url}): ${subRes.status}`);
+    const urlGroups = await mapWithConcurrency(
+      sitemapUrls,
+      8,
+      async (url, idx) => {
+        try {
+          const subRes = await fetchSitemap(url, dbg);
+          if (!subRes.ok) {
+            throw new Error(
+              `Sub-sitemap fetch failed (${url}): ${subRes.status}`,
+            );
+          }
+          const subXml = await subRes.text();
+          dbg("child XML", idx + 1, url, "bytes", subXml.length);
+          const subParsed = await parseStringPromise(subXml);
+          const locs = locsFromUrlset(subParsed.urlset).map((u) =>
+            rewriteUrlToBaseOrigin(u, baseUrl),
+          );
+          dbg("child urls", idx + 1, locs.length);
+          onStatus(`Fetched child sitemap ${idx + 1}/${sitemapUrls.length}`);
+          return locs;
+        } catch (e) {
+          errors.push(e.message);
+          dbg("child sitemap error", idx + 1, url, e.message);
+          onStatus(`Child sitemap ${idx + 1}/${sitemapUrls.length} failed`);
+          return [];
         }
-        const subXml = await subRes.text();
-        dbg("child XML", idx + 1, url, "bytes", subXml.length);
-        const subParsed = await parseStringPromise(subXml);
-        const locs = locsFromUrlset(subParsed.urlset).map((u) =>
-          rewriteUrlToBaseOrigin(u, baseUrl)
-        );
-        dbg("child urls", idx + 1, locs.length);
-        onStatus(`Fetched child sitemap ${idx + 1}/${sitemapUrls.length}`);
-        return locs;
-      } catch (e) {
-        errors.push(e.message);
-        dbg("child sitemap error", idx + 1, url, e.message);
-        onStatus(`Child sitemap ${idx + 1}/${sitemapUrls.length} failed`);
-        return [];
-      }
-    });
+      },
+    );
 
     if (sitemapUrls.length > 0 && errors.length === sitemapUrls.length) {
       throw new Error(`All child sitemaps failed. First error: ${errors[0]}`);
@@ -371,7 +395,7 @@ async function fetchAllUrls(baseUrl, onStatus = () => {}, dbg = () => {}) {
     return flat;
   }
   const direct = locsFromUrlset(parsed.urlset).map((u) =>
-    rewriteUrlToBaseOrigin(u, baseUrl)
+    rewriteUrlToBaseOrigin(u, baseUrl),
   );
   dbg("flat urlset URL count", direct.length);
   return direct;
@@ -452,7 +476,7 @@ async function runDrushUli(baseUrl) {
           code,
           stdout: stdout.trim(),
           stderr: stderr.trim(),
-          command: `ddev ${args.join(" ")}`
+          command: `ddev ${args.join(" ")}`,
         });
       });
     });
@@ -472,14 +496,14 @@ async function runDrushUli(baseUrl) {
       ["exec", "-p", inferredProjectName, ...uliWithUri],
       ["exec", "--project", inferredProjectName, ...uliWithUri],
       ["exec", "-p", inferredProjectName, "drush", "uli"],
-      ["exec", "--project", inferredProjectName, "drush", "uli"]
+      ["exec", "--project", inferredProjectName, "drush", "uli"],
     );
   }
   candidates.push(
     ["exec", ...uliWithUri],
     ["drush", "uli", `--uri=${siteOrigin}`, "--no-browser"],
     ["exec", "drush", "uli"],
-    ["drush", "uli"]
+    ["drush", "uli"],
   );
 
   const uniqueCandidates = [];
@@ -498,17 +522,17 @@ async function runDrushUli(baseUrl) {
       const url = parseUliUrl(`${result.stdout}\n${result.stderr}`);
       if (url) return url;
       failures.push(
-        `${result.command} succeeded but no URL found in output: ${result.stdout || result.stderr || "(empty output)"}`
+        `${result.command} succeeded but no URL found in output: ${result.stdout || result.stderr || "(empty output)"}`,
       );
       continue;
     }
     failures.push(
-      `${result.command} failed (exit ${result.code}): ${result.stderr || result.stdout || "Unknown error"}`
+      `${result.command} failed (exit ${result.code}): ${result.stderr || result.stdout || "Unknown error"}`,
     );
   }
 
   throw new Error(
-    `Could not generate admin login URL with DDEV/Drush. Tried: ${failures.join(" | ")}`
+    `Could not generate admin login URL with DDEV/Drush. Tried: ${failures.join(" | ")}`,
   );
 }
 
@@ -527,7 +551,7 @@ function alignUliUrlToSite(uliUrl, siteUrl) {
 async function verifyDrupalLogin(page, siteUrl, dbg = () => {}) {
   await page.goto(siteUrl, { waitUntil: "domcontentloaded", timeout: 15000 });
   const loggedIn = await page.evaluate(() =>
-    document.body?.classList.contains("user-logged-in")
+    document.body?.classList.contains("user-logged-in"),
   );
   dbg("drupal login body check", loggedIn ? "user-logged-in" : "anonymous");
   return loggedIn;
@@ -540,7 +564,7 @@ app.post("/scan", async (req, res) => {
     checks,
     urls: bodyUrls,
     debug: bodyDebug,
-    loginWithDrushUli
+    loginWithDrushUli,
   } = req.body;
   const dbg = makeDbg(DEBUG_ENV || Boolean(bodyDebug));
   let cancelled = false;
@@ -597,7 +621,7 @@ app.post("/scan", async (req, res) => {
       urls = await fetchAllUrls(
         siteUrl,
         (message) => send({ type: "status", message }),
-        dbg
+        dbg,
       );
       dbg("urls resolved", urls.length);
     }
@@ -619,7 +643,7 @@ app.post("/scan", async (req, res) => {
         if (
           !send({
             type: "status",
-            message: `Aligned ${rewriteCount} URL${rewriteCount === 1 ? "" : "s"} to ${new URL(siteUrl).origin} for authenticated crawl`
+            message: `Aligned ${rewriteCount} URL${rewriteCount === 1 ? "" : "s"} to ${new URL(siteUrl).origin} for authenticated crawl`,
           })
         ) {
           return;
@@ -635,14 +659,17 @@ app.post("/scan", async (req, res) => {
     browser = await chromium.launch({ headless: true });
     const ignoreHTTPSErrors = allowInsecureTlsForUrl(siteUrl);
     const context = await browser.newContext({ ignoreHTTPSErrors });
-    const scanConcurrencyRaw = Number(process.env.SITEMAP_SCAN_CONCURRENCY || 8);
+    const scanConcurrencyRaw = Number(
+      process.env.SITEMAP_SCAN_CONCURRENCY || 8,
+    );
     const scanConcurrency =
       Number.isFinite(scanConcurrencyRaw) && scanConcurrencyRaw > 0
         ? Math.floor(scanConcurrencyRaw)
         : 8;
 
     if (Boolean(loginWithDrushUli)) {
-      if (!send({ type: "status", message: "Generating admin login link..." })) return;
+      if (!send({ type: "status", message: "Generating admin login link..." }))
+        return;
       const uliUrl = alignUliUrlToSite(await runDrushUli(siteUrl), siteUrl);
       dbg("drush uli generated", uliUrl);
       if (!send({ type: "status", message: "Logging in as admin..." })) return;
@@ -651,32 +678,35 @@ app.post("/scan", async (req, res) => {
       try {
         await loginPage.goto(uliUrl, {
           waitUntil: "domcontentloaded",
-          timeout: 20000
+          timeout: 20000,
         });
-        await loginPage.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
+        await loginPage
+          .waitForLoadState("networkidle", { timeout: 10000 })
+          .catch(() => {});
         loggedIn = await verifyDrupalLogin(loginPage, siteUrl, dbg);
       } finally {
         await loginPage.close().catch(() => {});
       }
 
       const authCookies = (await context.cookies(siteUrl)).filter((cookie) =>
-        /^S?SESS/i.test(cookie.name)
+        /^S?SESS/i.test(cookie.name),
       );
       dbg(
         "login cookie check",
         authCookies.length > 0 ? "ok" : "missing",
-        authCookies.map((c) => c.name).join(",")
+        authCookies.map((c) => c.name).join(","),
       );
       if (!loggedIn) {
         throw new Error(
-          "Admin login did not stick (page is still anonymous after ULI). Use an https Site URL that matches your DDEV project, e.g. https://connect.ddev.site."
+          "Admin login did not stick (page is still anonymous after ULI). Use an https Site URL that matches your DDEV project, e.g. https://example.ddev.site.",
         );
       }
-      if (!send({ type: "login_verified", cookieCount: authCookies.length })) return;
+      if (!send({ type: "login_verified", cookieCount: authCookies.length }))
+        return;
       if (
         !send({
           type: "status",
-          message: `Admin login confirmed (${authCookies.length} session cookie${authCookies.length === 1 ? "" : "s"})`
+          message: `Admin login confirmed (${authCookies.length} session cookie${authCookies.length === 1 ? "" : "s"})`,
         })
       ) {
         return;
@@ -684,7 +714,10 @@ app.post("/scan", async (req, res) => {
     }
 
     dbg("scan workers", scanConcurrency);
-    send({ type: "status", message: `Scanning pages with ${scanConcurrency} worker(s)...` });
+    send({
+      type: "status",
+      message: `Scanning pages with ${scanConcurrency} worker(s)...`,
+    });
 
     await mapWithConcurrency(urls, scanConcurrency, async (url, i) => {
       if (cancelled) return;
@@ -714,7 +747,10 @@ app.post("/scan", async (req, res) => {
               }
             }
 
-            let elements = await queryElementsMatchingSelector(page, check.selector);
+            let elements = await queryElementsMatchingSelector(
+              page,
+              check.selector,
+            );
             elements = await filterExcludeWithin(elements, excludeWithin);
 
             let status, detail;
@@ -739,7 +775,7 @@ app.post("/scan", async (req, res) => {
                   : `Found ${elements.length} (should be 0)`;
             } else {
               const texts = await Promise.all(
-                elements.map((el) => el.textContent())
+                elements.map((el) => el.textContent()),
               );
               const matched = texts.some((t) => t?.includes(check.expected));
               status = matched ? "pass" : "fail";
@@ -753,7 +789,7 @@ app.post("/scan", async (req, res) => {
               selector: check.selector,
               excludeWithin: excludeWithin.trim() || undefined,
               status,
-              detail
+              detail,
             });
           } catch (e) {
             pageResults.push({
@@ -761,7 +797,7 @@ app.post("/scan", async (req, res) => {
               selector: check.selector,
               excludeWithin: excludeWithin.trim() || undefined,
               status: "error",
-              detail: e.message
+              detail: e.message,
             });
           }
         }
@@ -771,7 +807,7 @@ app.post("/scan", async (req, res) => {
           label: "Page load",
           selector: "-",
           status: "error",
-          detail: e.message
+          detail: e.message,
         });
       } finally {
         if (page) {
@@ -780,7 +816,13 @@ app.post("/scan", async (req, res) => {
       }
 
       if (cancelled) return;
-      dbg("page_done", url, "checks", pageResults.length, `${Date.now() - pageT0}ms total`);
+      dbg(
+        "page_done",
+        url,
+        "checks",
+        pageResults.length,
+        `${Date.now() - pageT0}ms total`,
+      );
       if (!send({ type: "page_done", url, results: pageResults })) return;
     });
 
@@ -820,6 +862,8 @@ app.listen(3333, () => {
   console.log(`   POST /scan JSON body limit: ${jsonBodyLimit}`);
   console.log("   Tailwind watch active (public/dist.css rebuilds on change)");
   if (DEBUG_ENV) {
-    console.log("🐛 Debug logging on (SITEMAP_CHECKER_DEBUG=1 or DEBUG=sitemap-checker)");
+    console.log(
+      "🐛 Debug logging on (SITEMAP_CHECKER_DEBUG=1 or DEBUG=sitemap-checker)",
+    );
   }
 });
